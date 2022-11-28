@@ -52,9 +52,23 @@ impl Pattern {
     }
 
     pub fn getCells(&self){
-        for cell in iproduct!(&self.dims_values){
-            println!("{:?}", cell);
-        } 
+        macro_rules! cartersian_product{
+            ($iterator:expr, $length:expr) =>{
+                
+                println!($("hello "));
+                // for cell in iproduct!($()){
+
+                // }
+                // for i in 1..$length{
+                //     println!("Hello world");
+                // }
+            };
+        }
+
+        cartersian_product!(&self.dims_values, 5);
+        // for cell in iproduct!(&self.dims_values){
+        //     println!("{:?}", cell);
+        // } 
     }
 
     pub fn getRelation(pattern: Pattern) -> Relation{
