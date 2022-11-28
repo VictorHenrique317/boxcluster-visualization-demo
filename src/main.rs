@@ -1,11 +1,10 @@
 mod pattern;
+mod file_reader;
+
 use pattern::Pattern;
 
 fn main() {
-    println!("Hello, world!");
-
-    let pattern_str: String = "1,2,3 3,2,1".to_owned();
-    for i in pattern_str.split(" "){
-        println!("{}", i);
-    }
+    let patterns: Vec<Pattern> = file_reader::readPatternFile("test.txt".to_owned());
+    println!("{}", patterns.len());
+    patterns[0].getCells();
 }
