@@ -1,11 +1,11 @@
 #![allow(non_snake_case)]
 use itertools::iproduct;
 
-pub struct Cell{
+pub struct Cell {
     coordinates: Vec<u32>,
 }
 
-pub enum Relation{
+pub enum Relation {
     NotContained,
     SuperPattern,
     SubPattern,
@@ -51,27 +51,33 @@ impl Pattern {
         return (dims_values, density);
     }
 
-    pub fn getCells(&self){
-        macro_rules! cartersian_product{
-            ($iterator:expr, $length:expr) =>{
-                
-                println!($("hello "));
-                // for cell in iproduct!($()){
-
-                // }
-                // for i in 1..$length{
-                //     println!("Hello world");
-                // }
-            };
+    fn cartesianProduct(set_a: &Vec<Vec<u32>>, set_b: &Vec<u32>) -> Vec<Vec<u32>> {
+        let mut result: Vec<Vec<u32>> = Vec::new();
+        for i in 0..set_a.len() {
+            for j in 0..set_b.len() {
+                let mut temp = set_a[i].clone();
+                temp.push(set_b[j]);
+                result.push(temp);
+            }
         }
-
-        cartersian_product!(&self.dims_values, 5);
-        // for cell in iproduct!(&self.dims_values){
-        //     println!("{:?}", cell);
-        // } 
+        return result;
     }
 
-    pub fn getRelation(pattern: Pattern) -> Relation{
+    pub fn getCells(&self) -> Vec<Vec<u32>>{
+        let n = self.dims_values.len();
+        let mut temp: Vec<Vec<u32>> = self.dims_values[0]
+            .clone()
+            .into_iter()
+            .map(|i| vec![i])
+            .collect();
+
+        for i in 1..n {
+            temp = Pattern::cartesianProduct(&temp, &self.dims_values[i]);
+        }
+        return temp;
+    }
+
+    pub fn getRelation(pattern: Pattern) -> Relation {
         return Relation::NotContained;
     }
 }
