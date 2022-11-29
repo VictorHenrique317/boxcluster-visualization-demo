@@ -5,26 +5,32 @@ pub struct Cell {
     coordinates: Vec<u32>,
 }
 
+#[derive(PartialEq)]
+#[derive(Debug)]
 pub enum Relation {
-    NotContained,
+    NotRelatable,
     SuperPattern,
     SubPattern,
 }
 
 pub struct Pattern {
+    pub identifier: u32,
     pub dims_values: Vec<Vec<u32>>, // {{1,2,3}, {3,2,1}}
     pub density: f64,
+    pub mut descendants: HashSet<Pattern>,
 }
 
 impl Pattern {
-    pub fn new(pattern_str: String) -> Self {
+    pub fn new(identifier:u32, pattern_str: String) -> Self {
         let extracted_values = Pattern::extractDimsAndDensity(pattern_str);
         let dims_values = extracted_values.0;
         let density = extracted_values.1;
 
         return Pattern {
+            identifier: identifier,
             dims_values: dims_values,
             density: density,
+            descendants: HashSet::new(),
         };
     }
 
@@ -77,7 +83,42 @@ impl Pattern {
         return temp;
     }
 
-    pub fn getRelation(pattern: Pattern) -> Relation {
-        return Relation::NotContained;
+    pub fn selfRelationTo(&self, pattern: &Pattern) -> (Relation, f64) { // Relation of the actual pattern
+        let self_cells = self.getCells(); 
+        let other_cells = pattern.getCells();
+
+        let self_cell_length = self_cells.len();
+        let other_cell_length = other_cells.len();
+
+        let self_unit_increase: f64 = 1.0 / self_cell_length as f64;
+        let other_unit_increase: f64 = 1.0 / other_cell_length as f64;
+
+        let mut self_overlap_percentage = 0.0;
+        let mut other_overlap_percentage = 0.0;
+
+        let mut counter = 0.0; 
+        for self_cell in self_cells.iter(){
+            counter += 1.0;
+
+            for other_cell in other_cells.iter(){
+                if self_cell == other_cell{
+                    self_overlap_percentage += self_unit_increase;
+                    other_overlap_percentage += other_unit_increase;
+                }
+            }
+        }
+
+        // dbg!(self_overlap_percentage);
+        // dbg!(other_overlap_percentage);
+
+        if self_overlap_percentage > other_overlap_percentage{
+            return (Relation::SubPattern, self_overlap_percentage);
+        }
+
+        if other_overlap_percentage > self_overlap_percentage{
+            return (Relation::SuperPattern, self_overlap_percentage);
+        }
+
+        return (Relation::NotRelatable, self_overlap_percentage);
     }
 }

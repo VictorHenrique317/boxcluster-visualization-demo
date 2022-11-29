@@ -13,8 +13,8 @@ pub fn readPatternFile(path: String) -> Vec<Pattern>{
         .map(|i| i.to_owned())
         .collect();
 
-    for line in lines.iter() {
-        patterns.push(Pattern::new(line.to_owned()));
+    for (i, line) in lines.iter().enumerate() {
+        patterns.push(Pattern::new(i as u32, line.to_owned()));
     }
 
     return patterns;
