@@ -1,12 +1,24 @@
 mod pattern;
-mod file_reader;
+mod dag_creator;
 
+use std::fs;
 use pattern::Pattern;
 use pattern::Relation;
+use dag_creator::DagCreator;
 
 fn main() {
-    let patterns: Vec<Pattern> = file_reader::readPatternFile("test.txt".to_owned());
-    // println!("{}", patterns[0].selfRelationTo(&patterns[1]) == Relation::NotRelatable);
-    println!("{:?}", patterns[0].selfRelationTo(&patterns[1]));
+    let mut patterns: Vec<Pattern> = Vec::new();        
+    let lines: Vec<String> = fs::read_to_string("test.txt".to_owned())
+        .expect("File not found")
+        .split("\n")
+        .map(|i| i.to_owned())
+        .collect();
 
+    for (i, line) in lines.iter().enumerate() {
+        patterns.push(Pattern::new(i as u32, line.to_owned()));
+    }
+
+    // dbg!(patterns[0].selfRelationTo(&patterns[1]));
+    let dag_creator = DagCreator::new(&patterns);
+    dag_creator.calculate();
 }

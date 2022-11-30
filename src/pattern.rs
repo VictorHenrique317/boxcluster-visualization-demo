@@ -13,14 +13,32 @@ pub enum Relation {
     SubPattern,
 }
 
-pub struct Pattern {
+pub struct Pattern{
     pub identifier: u32,
     pub dims_values: Vec<Vec<u32>>, // {{1,2,3}, {3,2,1}}
     pub density: f64,
-    pub mut descendants: HashSet<Pattern>,
+    pub super_patterns: Vec<Pattern>,
+    pub sub_patterns: Vec<Pattern>,
 }
 
-impl Pattern {
+impl Clone for Pattern{
+    ???????????
+}
+
+impl PartialEq for Pattern{
+    fn eq(&self, other: &Self) -> bool {
+        if self.dims_values == other.dims_values{
+            return true;
+        }
+
+        return false;
+    }
+}
+
+impl Eq for Pattern {}
+
+
+impl Pattern{
     pub fn new(identifier:u32, pattern_str: String) -> Self {
         let extracted_values = Pattern::extractDimsAndDensity(pattern_str);
         let dims_values = extracted_values.0;
@@ -30,7 +48,8 @@ impl Pattern {
             identifier: identifier,
             dims_values: dims_values,
             density: density,
-            descendants: HashSet::new(),
+            super_patterns: Vec::new(),
+            sub_patterns: Vec::new(),
         };
     }
 

@@ -1,63 +1,88 @@
 use crate::Pattern;
-use crate::Relatoion
-use std::collections::HashSet;
+use crate::Relation;
 
-pub struct DagCreator {
-    patterns: HashSet<Pattern>,
-    // patterns_identifiers: Vec<u32>,
+pub struct DagCreator<'a>{
+    patterns: &'a Vec<Pattern>,
 }
 
-impl DagCreator {
-    pub fn new(patterns: &Vec<Pattern>) -> Self {
-        return DagCreator {
-            pattern: HashSet::from_iter(patterns.iter().cloned()),
+impl<'a> DagCreator<'a>{
+    pub fn new(patterns: &'a Vec<Pattern>) -> Self {
+        return DagCreator{
+            patterns: patterns,
         };
     }
 
-    fn setRelationToMultiple(pattern:Pattern, interested_patterns:HashSet<Pattern>){
-        let relationed_patterns: HashSet<Pattern> = HashSet::new();
+    // fn setRelationToMultiple(pattern:&Pattern, interested_patterns:Vec<Pattern>){
+    //     let mut super_patterns: Vec<&'a Pattern<'a>> = Vec::new();
 
-        for interested_pattern in interested_patterns{ // Filter the relationed patterns
-            current_relation = pattern.selfRelationTo(interested_pattern);
+    //     for interested_pattern in &mut interested_patterns{ // Filter the relationed patterns
+    //         let current_relation = interested_pattern.selfRelationTo(pattern);
             
-            if current_relation.0 == Relation::SubPattern{
-                relationed_patterns.insert(interested_pattern);
-            }
+    //         if current_relation.0 == Relation::SuperPattern{
+    //             super_patterns.push(interested_pattern);
+    //             continue;
+    //         }
             
-            if current_relation.0 == Relation::SuperPattern{
-                panic!("Super patterns relations should not reach this point");
-            }
-        }
+    //         if current_relation.0 == Relation::SubPattern{
+    //             let wrongly_connected_patterns = &interested_pattern.super_patterns;
 
+    //             // for wrongly_connected_pattern in &mut interested_pattern.super_patterns.iter(){
+    //             for wrongly_connected_pattern in wrongly_connected_patterns{
+    //                 // wrongly_connected_pattern.sub_patterns.retain(|i| *i != interested_pattern);
+    //                 let mut right_sub_patterns = wrongly_connected_pattern.sub_patterns.clone();
+    //                 right_sub_patterns.retain(|i| i != interested_pattern);
 
-        for relationed_pattern in relationed_patterns{ // Recursive call to set relations of possible subpatterns from each relationed pattern
+    //                 wrongly_connected_pattern.sub_patterns = right_sub_patterns;
+    //             }
+    //             interested_pattern.super_patterns = vec![pattern];
+    //         }
+    //     }
 
-        }
-    }
+    //     if super_patterns.len() == 0{ // Pattern is a font
+    //         return;
+    //     }
 
-    pub fn calculate(&self) {
-        let mut fonts: HashSet<Pattern> = HashSet::new();
-        let mut found_heritage: HashSet<Pattern> = HashSet::new();
+    //     for super_pattern in super_patterns{ // Recursive call to set relations of possible subpatterns from each super pattern
+    //         if super_pattern.sub_patterns.contains(&pattern){
+    //             continue;
+    //         }
+
+    //         if super_pattern.sub_patterns.len() == 0{
+    //             super_pattern.sub_patterns.push(pattern); // One end of DAG tree
+    //             pattern.super_patterns.push(super_pattern);
+    //             continue;
+
+    //         } 
+
+    //         Self::setRelationToMultiple(super_pattern, super_pattern.sub_patterns);
+    //     }
+    // }
+
+    pub fn calculate(&self){
+        // let mut fonts: Vec<&Pattern> = Vec::new();
+        // let mut found_heritage: Vec<&Pattern> = Vec::new();
+        let mut calculated_patterns: Vec<Pattern> = self.patterns.clone();
         
 
-        for outer_pattern in self.patterns{
-            let mut is_font = true;
+        // for outer_pattern in self.patterns{
+        //     let mut is_font = true;
 
-            for inner_pattern in self.patterns{
-                if outer_pattern.selfRelationTo(inner_pattern) == Relation::SubPattern{
-                    is_font = false;
-                    break;
-                }
-            }   
+        //     for inner_pattern in self.patterns{
+        //         if outer_pattern.selfRelationTo(inner_pattern) == Relation::SubPattern{
+        //             is_font = false;
+        //             break;
+        //         }
+        //     }   
 
-            if is_font{
-                fonts.insert(outer_pattern);
-            }
-        }
+        //     if is_font{
+        //         fonts.insert(outer_pattern);
+        //     }
+        // }
 
-        for pattern in self.patterns{
-            self.setRelationToMultiple(pattern, fonts);
-        }
+        // for pattern in self.patterns.iter(){
+        //     Self::setRelationToMultiple(pattern, self.patterns);
+        // }
+
     }
     
 }
