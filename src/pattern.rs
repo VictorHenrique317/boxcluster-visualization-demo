@@ -5,29 +5,25 @@ pub struct Cell {
     coordinates: Vec<u32>,
 }
 
-#[derive(PartialEq)]
-#[derive(Debug)]
+#[derive(PartialEq, Debug)]
 pub enum Relation {
     NotRelatable,
     SuperPattern,
     SubPattern,
 }
 
-pub struct Pattern{
+#[derive(Clone, Debug)]
+pub struct Pattern {
     pub identifier: u32,
     pub dims_values: Vec<Vec<u32>>, // {{1,2,3}, {3,2,1}}
     pub density: f64,
-    pub super_patterns: Vec<Pattern>,
-    pub sub_patterns: Vec<Pattern>,
+    pub super_patterns: Vec<u32>,
+    pub sub_patterns: Vec<u32>,
 }
 
-impl Clone for Pattern{
-    ???????????
-}
-
-impl PartialEq for Pattern{
+impl PartialEq for Pattern {
     fn eq(&self, other: &Self) -> bool {
-        if self.dims_values == other.dims_values{
+        if self.dims_values == other.dims_values {
             return true;
         }
 
@@ -37,9 +33,8 @@ impl PartialEq for Pattern{
 
 impl Eq for Pattern {}
 
-
-impl Pattern{
-    pub fn new(identifier:u32, pattern_str: String) -> Self {
+impl Pattern {
+    pub fn new(identifier: u32, pattern_str: String) -> Self {
         let extracted_values = Pattern::extractDimsAndDensity(pattern_str);
         let dims_values = extracted_values.0;
         let density = extracted_values.1;
@@ -62,7 +57,7 @@ impl Pattern{
 
         for (i, dim_values_str) in pattern_str.iter().enumerate() {
             if i == vector_length - 1 {
-                density = dim_values_str.parse::<f64>().unwrap();
+                density = dim_values_str.replace("\r", "").parse::<f64>().unwrap();
                 break;
             }
 
@@ -88,7 +83,7 @@ impl Pattern{
         return result;
     }
 
-    pub fn getCells(&self) -> Vec<Vec<u32>>{
+    pub fn getCells(&self) -> Vec<Vec<u32>> {
         let n = self.dims_values.len();
         let mut temp: Vec<Vec<u32>> = self.dims_values[0]
             .clone()
@@ -102,8 +97,9 @@ impl Pattern{
         return temp;
     }
 
-    pub fn selfRelationTo(&self, pattern: &Pattern) -> (Relation, f64) { // Relation of the actual pattern
-        let self_cells = self.getCells(); 
+    pub fn selfRelationTo(&self, pattern: &Pattern) -> (Relation, f64) {
+        // Relation of the actual pattern
+        let self_cells = self.getCells();
         let other_cells = pattern.getCells();
 
         let self_cell_length = self_cells.len();
@@ -115,12 +111,12 @@ impl Pattern{
         let mut self_overlap_percentage = 0.0;
         let mut other_overlap_percentage = 0.0;
 
-        let mut counter = 0.0; 
-        for self_cell in self_cells.iter(){
+        let mut counter = 0.0;
+        for self_cell in self_cells.iter() {
             counter += 1.0;
 
-            for other_cell in other_cells.iter(){
-                if self_cell == other_cell{
+            for other_cell in other_cells.iter() {
+                if self_cell == other_cell {
                     self_overlap_percentage += self_unit_increase;
                     other_overlap_percentage += other_unit_increase;
                 }
@@ -130,11 +126,11 @@ impl Pattern{
         // dbg!(self_overlap_percentage);
         // dbg!(other_overlap_percentage);
 
-        if self_overlap_percentage > other_overlap_percentage{
+        if self_overlap_percentage > other_overlap_percentage {
             return (Relation::SubPattern, self_overlap_percentage);
         }
 
-        if other_overlap_percentage > self_overlap_percentage{
+        if other_overlap_percentage > self_overlap_percentage {
             return (Relation::SuperPattern, self_overlap_percentage);
         }
 

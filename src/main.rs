@@ -19,6 +19,6 @@ fn main() {
     }
 
     // dbg!(patterns[0].selfRelationTo(&patterns[1]));
-    let dag_creator = DagCreator::new(&patterns);
-    dag_creator.calculate();
+    let mut dag_creator = DagCreator::new();
+    dag_creator.calculate(patterns);
 }
