@@ -49,19 +49,18 @@ impl DagCreator {
             }
         }
 
-        if super_patterns.len() == 0 {
-            // Pattern is a font
+        if super_patterns.len() == 0 { // Pattern is a font
             println!("No super patterns found for {}", &pattern.identifier);
             return false;
         }
 
         println!("Super patterns found for {}: {:?}", &pattern.identifier, &super_patterns.iter().map(|i| i.identifier).collect::<Vec<u32>>());
-        for super_pattern in super_patterns {
-            // Recursive call to set relations of possible subpatterns from each super pattern
-            // if super_pattern.sub_patterns.contains(&pattern.identifier) {
+        for super_pattern in super_patterns { // Recursive call to set relations of possible subpatterns from each super pattern
+            
             let sub_patterns = self.pattern_subs.get_mut(&super_pattern.identifier).unwrap();
 
             if sub_patterns.contains(&pattern.identifier) && sub_patterns.len() == 1{ // maybe remove length check?
+                println!("\n{} is the only subpattern of {}, can add previous pattern now", &pattern.identifier, &super_pattern.identifier);
                 return true;
             }
 
@@ -86,24 +85,21 @@ impl DagCreator {
             }
 
             let super_subs_identifiers: &Vec<u32> = &self.pattern_subs.get(&super_pattern.identifier).unwrap().clone();
-            // let mut super_subs: Vec<&Pattern> = Vec::new();
 
             for identifier in super_subs_identifiers{
-            // for identifier in sub_patterns.iter(){
                 for possible_super_sub in all_patterns.iter(){
                     if possible_super_sub.identifier == *identifier{
-                        // super_subs.push(possible_super_sub);
 
                         println!("\n=====> RECURSIVE call to see {}", &possible_super_sub.identifier);
                         let mut interested_patterns = interested_patterns.clone();
                         interested_patterns.retain(|i| i.identifier != possible_super_sub.identifier);
 
                         let is_dag_end = self.setRelationToMultiple(possible_super_sub, &interested_patterns, all_patterns);
-                        // if is_dag_end{
-                        //     println!("\nHit one end of DAG tree");
-                        //     println!("Adding subpattern {} to {}", &pattern.identifier, &super_pattern.identifier);
-                        //     sub_patterns.push(pattern.identifier);
-                        // }
+                        if is_dag_end{
+                            println!("Adding subpattern {} to {}", &pattern.identifier, &super_pattern.identifier);
+
+                            self.pattern_subs.get_mut(&super_pattern.identifier).unwrap().push(pattern.identifier); // Borrowing again
+                        }
                         break;
                     }
                 }

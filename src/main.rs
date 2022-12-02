@@ -8,6 +8,7 @@ use dag_creator::DagCreator;
 
 fn main() {
     let filename = "double-diff-overlap.txt".to_owned();
+    // let filename = "simple-overlap-2.txt".to_owned();
     let mut patterns: Vec<Pattern> = Vec::new();        
     let lines: Vec<String> = fs::read_to_string(filename)
         .expect("File not found")
