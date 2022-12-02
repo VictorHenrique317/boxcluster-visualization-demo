@@ -1,3 +1,4 @@
+#![allow(non_snake_case)]
 use crate::Pattern;
 use crate::Relation;
 use std::collections::HashMap;
@@ -13,27 +14,15 @@ pub struct DagCreator {
 
 impl DagCreator {
     pub fn new() -> Self {
-        // let mut patterns_mapping: HashMap<u32, Pattern> = HashMap::new();
-        // for pattern in patterns {
-        //     patterns_mapping.insert(pattern.identifier, pattern);
-        // }
-
-        // return DagCreator {
-        //     pattterns_mapping: patterns_mapping,
-        // };   
         return DagCreator{pattern_subs: HashMap::new(), pattern_supers: HashMap::new()};
     }
 
-    // fn getSuperPatternsOf(identifier: u32) -> Vec<u32>{
-    //     return Vec::new();
-    // }
-
-    fn setRelationToMultiple(&mut self, pattern: &Pattern, interested_patterns:Vec<&Pattern>){
+    fn setRelationToMultiple(&mut self, pattern: &Pattern, interested_patterns:&Vec<&Pattern>, all_patterns: &Vec<&Pattern>) -> bool{
         let mut super_patterns: Vec<&Pattern> = Vec::new();
 
-        for interested_pattern in interested_patterns {
-            // Filter the relationed patterns
+        for interested_pattern in interested_patterns { // Filter the relationed patterns
             let current_relation = interested_pattern.selfRelationTo(&pattern);
+            println!("{} relation to {}: {:?}", &interested_pattern.identifier, &pattern.identifier, &current_relation);
 
             if current_relation.0 == Relation::SuperPattern {
                 super_patterns.push(interested_pattern);
@@ -41,18 +30,20 @@ impl DagCreator {
             }
 
             if current_relation.0 == Relation::SubPattern {
-                // let wrongly_connected_patterns = interested_pattern.super_patterns;
-                // let wrongly_connected_patterns = DagCreator::getSuperPatternsOf(interested_pattern.identifier);
                 let wrongly_connected_patterns = self.pattern_supers.get(&interested_pattern.identifier).unwrap();
 
                 for wrongly_connected_pattern in wrongly_connected_patterns {
+                    if wrongly_connected_pattern == &pattern.identifier{  // Prevents a node from altering it's own relations
+                        continue;
+                    }
+                    
+                    println!("   {} is wrongly connected to {}, switching connections\n", &interested_pattern.identifier, &pattern.identifier);
+                    // Here only the relations of nodes != pattern will be changed (expected)
 
                     let wrong_subpatterns = self.pattern_subs.get_mut(wrongly_connected_pattern).unwrap();
                     wrong_subpatterns.retain(|identifier| *identifier != interested_pattern.identifier);
                 }
 
-                // DagCreator::getSuperPatternsOf(interested_pattern.identifier);
-                // interested_pattern.super_patterns = vec![pattern];
                 let interested_pattern_supers = self.pattern_supers.get_mut(&interested_pattern.identifier).unwrap();
                 *interested_pattern_supers = vec![pattern.identifier];
             }
@@ -60,33 +51,69 @@ impl DagCreator {
 
         if super_patterns.len() == 0 {
             // Pattern is a font
-            return;
+            println!("No super patterns found for {}", &pattern.identifier);
+            return false;
         }
 
+        println!("Super patterns found for {}: {:?}", &pattern.identifier, &super_patterns.iter().map(|i| i.identifier).collect::<Vec<u32>>());
         for super_pattern in super_patterns {
             // Recursive call to set relations of possible subpatterns from each super pattern
             // if super_pattern.sub_patterns.contains(&pattern.identifier) {
             let sub_patterns = self.pattern_subs.get_mut(&super_pattern.identifier).unwrap();
-            if sub_patterns.contains(&pattern.identifier) {
+
+            if sub_patterns.contains(&pattern.identifier) && sub_patterns.len() == 1{ // maybe remove length check?
+                return true;
+            }
+
+            if sub_patterns.contains(&pattern.identifier) { // possible bug?
                 continue;
             }
 
             if sub_patterns.len() == 0 {
+                println!("\nHit one end of DAG tree");
+                println!("Adding subpattern {} to {}", &pattern.identifier, &super_pattern.identifier);
+
                 sub_patterns.push(pattern.identifier); // One end of DAG tree
-                self.pattern_supers.get_mut(&pattern.identifier).unwrap().push(super_pattern.identifier);
+
+                if !self.pattern_supers.get_mut(&pattern.identifier).unwrap().contains(&super_pattern.identifier){
+                    // Blocks double adition in case block current_relation.0 == Relation::SubPattern is executed
+                    
+                    println!("Adding superpattern {} to {}", &super_pattern.identifier, &pattern.identifier);
+                    self.pattern_supers.get_mut(&pattern.identifier).unwrap().push(super_pattern.identifier)
+                }
+
                 continue;
             }
 
-            // let subpatterns: Vec<Pattern> = super_pattern
-            //     .sub_patterns
-            //     .iter()
-            //     .map(|i| self.pattterns_mapping.get(i).unwrap())
-            //     .collect();
+            let super_subs_identifiers: &Vec<u32> = &self.pattern_subs.get(&super_pattern.identifier).unwrap().clone();
+            // let mut super_subs: Vec<&Pattern> = Vec::new();
 
-            // result = Self::setRelationToMultiple(result, super_pattern, subpatterns);
+            for identifier in super_subs_identifiers{
+            // for identifier in sub_patterns.iter(){
+                for possible_super_sub in all_patterns.iter(){
+                    if possible_super_sub.identifier == *identifier{
+                        // super_subs.push(possible_super_sub);
+
+                        println!("\n=====> RECURSIVE call to see {}", &possible_super_sub.identifier);
+                        let mut interested_patterns = interested_patterns.clone();
+                        interested_patterns.retain(|i| i.identifier != possible_super_sub.identifier);
+
+                        let is_dag_end = self.setRelationToMultiple(possible_super_sub, &interested_patterns, all_patterns);
+                        // if is_dag_end{
+                        //     println!("\nHit one end of DAG tree");
+                        //     println!("Adding subpattern {} to {}", &pattern.identifier, &super_pattern.identifier);
+                        //     sub_patterns.push(pattern.identifier);
+                        // }
+                        break;
+                    }
+                }
+            }
+
+
+            
         }
 
-
+        return false;
     }
 
     pub fn calculate(&mut self, patterns: Vec<Pattern>) {
@@ -124,15 +151,19 @@ impl DagCreator {
         //     patterns_to_change = DagCreator::setRelationToMultiple(patterns_to_change, current_pattern, other_patterns);
         // }
 
+
         for pattern in patterns.iter(){
             self.pattern_subs.insert(pattern.identifier, Vec::new());
             self.pattern_supers.insert(pattern.identifier, Vec::new());
         }
 
+        let all_patterns: Vec<&Pattern> = patterns.iter().collect();
         for pattern in patterns.iter(){
             let current_pattern = pattern;
             let other_patterns: Vec<&Pattern> = patterns.iter().filter(|i| *i != current_pattern).collect();
-            self.setRelationToMultiple(current_pattern, other_patterns);
+            
+            println!("\n=====> NORMAL call from {}", &pattern.identifier);
+            self.setRelationToMultiple(current_pattern, &other_patterns, &all_patterns);
         }
 
         dbg!(&self.pattern_subs);
