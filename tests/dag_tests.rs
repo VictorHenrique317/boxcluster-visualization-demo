@@ -12,7 +12,7 @@ mod dag_tests{
         let patterns = getPatterns(path);
 
         let mut dag_creator = DagCreator::new();
-        dag_creator.calculate(patterns);
+        dag_creator.calculate(patterns, None);
         
         let mut expected_subs: HashMap<u32, Vec<u32>> = HashMap::new();
         expected_subs.insert(1, vec![2]);
@@ -31,7 +31,7 @@ mod dag_tests{
         let patterns = getPatterns(path);
 
         let mut dag_creator = DagCreator::new();
-        dag_creator.calculate(patterns);
+        dag_creator.calculate(patterns, None);
         
         let mut expected_subs: HashMap<u32, Vec<u32>> = HashMap::new();
         expected_subs.insert(1, vec![2]);
@@ -53,7 +53,7 @@ mod dag_tests{
         let patterns = getPatterns(path);
 
         let mut dag_creator = DagCreator::new();
-        dag_creator.calculate(patterns);
+        dag_creator.calculate(patterns, None);
         
         let mut expected_subs: HashMap<u32, Vec<u32>> = HashMap::new();
         expected_subs.insert(1, vec![2, 3]);
@@ -75,7 +75,7 @@ mod dag_tests{
         let patterns = getPatterns(path);
 
         let mut dag_creator = DagCreator::new();
-        dag_creator.calculate(patterns);
+        dag_creator.calculate(patterns, None);
         
         let mut expected_subs: HashMap<u32, Vec<u32>> = HashMap::new();
         expected_subs.insert(1, vec![2, 3, 4]);
@@ -99,7 +99,7 @@ mod dag_tests{
         let patterns = getPatterns(path);
 
         let mut dag_creator = DagCreator::new();
-        dag_creator.calculate(patterns);
+        dag_creator.calculate(patterns, None);
         
         let mut expected_subs: HashMap<u32, Vec<u32>> = HashMap::new();
         expected_subs.insert(1, vec![2, 3, 4, 5]);
@@ -125,7 +125,7 @@ mod dag_tests{
         let patterns = getPatterns(path);
 
         let mut dag_creator = DagCreator::new();
-        dag_creator.calculate(patterns);
+        dag_creator.calculate(patterns, None);
         
         let mut expected_subs: HashMap<u32, Vec<u32>> = HashMap::new();
         expected_subs.insert(1, vec![2]);
@@ -147,7 +147,7 @@ mod dag_tests{
         let patterns = getPatterns(path);
 
         let mut dag_creator = DagCreator::new();
-        dag_creator.calculate(patterns);
+        dag_creator.calculate(patterns, None);
         
         let mut expected_subs: HashMap<u32, Vec<u32>> = HashMap::new();
         expected_subs.insert(1, vec![2, 3]);
@@ -171,7 +171,7 @@ mod dag_tests{
         let patterns = getPatterns(path);
 
         let mut dag_creator = DagCreator::new();
-        dag_creator.calculate(patterns);
+        dag_creator.calculate(patterns, None);
         
         let mut expected_subs: HashMap<u32, Vec<u32>> = HashMap::new();
         expected_subs.insert(1, vec![2, 5, 6]);

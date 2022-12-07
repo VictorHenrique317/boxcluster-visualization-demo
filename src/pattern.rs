@@ -5,7 +5,7 @@ pub struct Cell {
     coordinates: Vec<u32>,
 }
 
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Debug, Clone, Copy)]
 pub enum Relation {
     NotRelatable,
     SuperPattern,

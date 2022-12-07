@@ -3,7 +3,7 @@
 pub mod pattern;
 pub mod dag_creator;
 
-use debug_print::{debug_print, debug_println, debug_eprint, debug_eprintln};
+use debug_print::{debug_println};
 use std::fs;
 use pattern::*;
 use dag_creator::*;
@@ -24,9 +24,9 @@ pub fn getPatterns(path:String) -> Vec<Pattern>{
 }
 
 pub fn main() {
-    let path = "tests/test_data/simple-msub.txt".to_owned();
+    let path = "tests/test_data/double-diff-overlap.txt".to_owned();
     let patterns = getPatterns(path);
 
     let mut dag_creator = DagCreator::new();
-    dag_creator.calculate(patterns);
+    dag_creator.calculate(patterns, None);
 }
