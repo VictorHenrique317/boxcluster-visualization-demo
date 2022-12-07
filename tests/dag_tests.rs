@@ -1,19 +1,37 @@
 #![allow(non_snake_case)]
-mod dag_tests{
-    use std::collections::HashMap;
-    use std::fs;
-    use boxcluster_visualization::*;
+mod dag_tests {
     use boxcluster_visualization::dag_creator::*;
     use boxcluster_visualization::pattern::*;
+    use boxcluster_visualization::*;
+    use itertools::Itertools;
+    use std::collections::HashMap;
+    use std::fs;
+
+    fn sortHashMap(hashmap: &HashMap<u32, Vec<u32>>) -> HashMap<u32, Vec<u32>> {
+        let mut sorted_hashmap: HashMap<u32, Vec<u32>> = HashMap::new();
+
+        for key in hashmap.keys().sorted() {
+            let sorted_value: Vec<u32> = hashmap
+                .get(key)
+                .unwrap()
+                .into_iter()
+                .sorted()
+                .map(|i| i.clone())
+                .collect();
+            sorted_hashmap.insert(*key, sorted_value);
+        }
+
+        return sorted_hashmap;
+    }
 
     #[test]
-    fn testSimpleOverlap(){
+    fn testSimpleOverlap() {
         let path = "tests/test_data/simple-overlap.txt".to_owned();
         let patterns = getPatterns(path);
 
         let mut dag_creator = DagCreator::new();
         dag_creator.calculate(patterns, None);
-        
+
         let mut expected_subs: HashMap<u32, Vec<u32>> = HashMap::new();
         expected_subs.insert(1, vec![2]);
         expected_subs.insert(2, vec![]);
@@ -21,18 +39,25 @@ mod dag_tests{
         let mut expected_supers: HashMap<u32, Vec<u32>> = HashMap::new();
         expected_supers.insert(1, vec![]);
         expected_supers.insert(2, vec![1]);
-        assert_eq!(dag_creator.pattern_subs, expected_subs);
-        assert_eq!(dag_creator.pattern_supers, expected_supers);
+
+        let r_subs = sortHashMap(&dag_creator.pattern_subs);
+        let r_supers = sortHashMap(&dag_creator.pattern_supers);
+
+        let e_subs = sortHashMap(&expected_subs);
+        let e_supers = sortHashMap(&expected_supers);
+
+        assert_eq!(r_subs, e_subs);
+        assert_eq!(r_supers, e_supers);
     }
 
     #[test]
-    fn testSimpleOverlap2(){
+    fn testSimpleOverlap2() {
         let path = "tests/test_data/simple-overlap-2.txt".to_owned();
         let patterns = getPatterns(path);
 
         let mut dag_creator = DagCreator::new();
         dag_creator.calculate(patterns, None);
-        
+
         let mut expected_subs: HashMap<u32, Vec<u32>> = HashMap::new();
         expected_subs.insert(1, vec![2]);
         expected_subs.insert(2, vec![]);
@@ -43,18 +68,24 @@ mod dag_tests{
         expected_supers.insert(2, vec![1]);
         expected_supers.insert(3, vec![]);
 
-        assert_eq!(dag_creator.pattern_subs, expected_subs);
-        assert_eq!(dag_creator.pattern_supers, expected_supers);
+        let r_subs = sortHashMap(&dag_creator.pattern_subs);
+        let r_supers = sortHashMap(&dag_creator.pattern_supers);
+
+        let e_subs = sortHashMap(&expected_subs);
+        let e_supers = sortHashMap(&expected_supers);
+
+        assert_eq!(r_subs, e_subs);
+        assert_eq!(r_supers, e_supers);
     }
 
     #[test]
-    fn testDoubleDiffOverlap(){
+    fn testDoubleDiffOverlap() {
         let path = "tests/test_data/double-diff-overlap.txt".to_owned();
         let patterns = getPatterns(path);
 
         let mut dag_creator = DagCreator::new();
         dag_creator.calculate(patterns, None);
-        
+
         let mut expected_subs: HashMap<u32, Vec<u32>> = HashMap::new();
         expected_subs.insert(1, vec![2, 3]);
         expected_subs.insert(2, vec![]);
@@ -64,19 +95,25 @@ mod dag_tests{
         expected_supers.insert(1, vec![]);
         expected_supers.insert(2, vec![1]);
         expected_supers.insert(3, vec![1]);
-        
-        assert_eq!(dag_creator.pattern_subs, expected_subs);
-        assert_eq!(dag_creator.pattern_supers, expected_supers);
+
+        let r_subs = sortHashMap(&dag_creator.pattern_subs);
+        let r_supers = sortHashMap(&dag_creator.pattern_supers);
+
+        let e_subs = sortHashMap(&expected_subs);
+        let e_supers = sortHashMap(&expected_supers);
+
+        assert_eq!(r_subs, e_subs);
+        assert_eq!(r_supers, e_supers);
     }
 
     #[test]
-    fn testTripleDiffOverlap(){
+    fn testTripleDiffOverlap() {
         let path = "tests/test_data/triple-diff-overlap.txt".to_owned();
         let patterns = getPatterns(path);
 
         let mut dag_creator = DagCreator::new();
         dag_creator.calculate(patterns, None);
-        
+
         let mut expected_subs: HashMap<u32, Vec<u32>> = HashMap::new();
         expected_subs.insert(1, vec![2, 3, 4]);
         expected_subs.insert(2, vec![]);
@@ -88,19 +125,25 @@ mod dag_tests{
         expected_supers.insert(2, vec![1]);
         expected_supers.insert(3, vec![1]);
         expected_supers.insert(4, vec![1]);
-        
-        assert_eq!(dag_creator.pattern_subs, expected_subs);
-        assert_eq!(dag_creator.pattern_supers, expected_supers);
+
+        let r_subs = sortHashMap(&dag_creator.pattern_subs);
+        let r_supers = sortHashMap(&dag_creator.pattern_supers);
+
+        let e_subs = sortHashMap(&expected_subs);
+        let e_supers = sortHashMap(&expected_supers);
+
+        assert_eq!(r_subs, e_subs);
+        assert_eq!(r_supers, e_supers);
     }
 
     #[test]
-    fn testQuadrupleDiffOverlap(){
+    fn testQuadrupleDiffOverlap() {
         let path = "tests/test_data/quadruple-diff-overlap.txt".to_owned();
         let patterns = getPatterns(path);
 
         let mut dag_creator = DagCreator::new();
         dag_creator.calculate(patterns, None);
-        
+
         let mut expected_subs: HashMap<u32, Vec<u32>> = HashMap::new();
         expected_subs.insert(1, vec![2, 3, 4, 5]);
         expected_subs.insert(2, vec![]);
@@ -114,19 +157,25 @@ mod dag_tests{
         expected_supers.insert(3, vec![1]);
         expected_supers.insert(4, vec![1]);
         expected_supers.insert(5, vec![1]);
-        
-        assert_eq!(dag_creator.pattern_subs, expected_subs);
-        assert_eq!(dag_creator.pattern_supers, expected_supers);
+
+        let r_subs = sortHashMap(&dag_creator.pattern_subs);
+        let r_supers = sortHashMap(&dag_creator.pattern_supers);
+
+        let e_subs = sortHashMap(&expected_subs);
+        let e_supers = sortHashMap(&expected_supers);
+
+        assert_eq!(r_subs, e_subs);
+        assert_eq!(r_supers, e_supers);
     }
 
     #[test]
-    fn testSimpleMSub(){
+    fn testSimpleMSub() {
         let path = "tests/test_data/simple-msub.txt".to_owned();
         let patterns = getPatterns(path);
 
         let mut dag_creator = DagCreator::new();
         dag_creator.calculate(patterns, None);
-        
+
         let mut expected_subs: HashMap<u32, Vec<u32>> = HashMap::new();
         expected_subs.insert(1, vec![2]);
         expected_subs.insert(2, vec![3]);
@@ -136,19 +185,25 @@ mod dag_tests{
         expected_supers.insert(1, vec![]);
         expected_supers.insert(2, vec![1]);
         expected_supers.insert(3, vec![2]);
-        
-        assert_eq!(dag_creator.pattern_subs, expected_subs);
-        assert_eq!(dag_creator.pattern_supers, expected_supers);
+
+        let r_subs = sortHashMap(&dag_creator.pattern_subs);
+        let r_supers = sortHashMap(&dag_creator.pattern_supers);
+
+        let e_subs = sortHashMap(&expected_subs);
+        let e_supers = sortHashMap(&expected_supers);
+
+        assert_eq!(r_subs, e_subs);
+        assert_eq!(r_supers, e_supers);
     }
 
     #[test]
-    fn testSimpleMSub2(){
+    fn testSimpleMSub2() {
         let path = "tests/test_data/simple-msub-2.txt".to_owned();
         let patterns = getPatterns(path);
 
         let mut dag_creator = DagCreator::new();
         dag_creator.calculate(patterns, None);
-        
+
         let mut expected_subs: HashMap<u32, Vec<u32>> = HashMap::new();
         expected_subs.insert(1, vec![2, 3]);
         expected_subs.insert(2, vec![]);
@@ -160,19 +215,25 @@ mod dag_tests{
         expected_supers.insert(2, vec![1]);
         expected_supers.insert(3, vec![1]);
         expected_supers.insert(4, vec![3]);
-        
-        assert_eq!(dag_creator.pattern_subs, expected_subs);
-        assert_eq!(dag_creator.pattern_supers, expected_supers);
+
+        let r_subs = sortHashMap(&dag_creator.pattern_subs);
+        let r_supers = sortHashMap(&dag_creator.pattern_supers);
+
+        let e_subs = sortHashMap(&expected_subs);
+        let e_supers = sortHashMap(&expected_supers);
+
+        assert_eq!(r_subs, e_subs);
+        assert_eq!(r_supers, e_supers);
     }
 
     #[test]
-    fn testComplexMSub(){
+    fn testComplexMSub() {
         let path = "tests/test_data/complex-msub.txt".to_owned();
         let patterns = getPatterns(path);
 
         let mut dag_creator = DagCreator::new();
         dag_creator.calculate(patterns, None);
-        
+
         let mut expected_subs: HashMap<u32, Vec<u32>> = HashMap::new();
         expected_subs.insert(1, vec![2, 5, 6]);
         expected_subs.insert(2, vec![3, 4]);
@@ -190,9 +251,14 @@ mod dag_tests{
         expected_supers.insert(5, vec![1]);
         expected_supers.insert(6, vec![1]);
         expected_supers.insert(7, vec![6]);
-        
-        assert_eq!(dag_creator.pattern_subs, expected_subs);
-        assert_eq!(dag_creator.pattern_supers, expected_supers);
-    }
 
+        let r_subs = sortHashMap(&dag_creator.pattern_subs);
+        let r_supers = sortHashMap(&dag_creator.pattern_supers);
+
+        let e_subs = sortHashMap(&expected_subs);
+        let e_supers = sortHashMap(&expected_supers);
+
+        assert_eq!(r_subs, e_subs);
+        assert_eq!(r_supers, e_supers);
+    }
 }

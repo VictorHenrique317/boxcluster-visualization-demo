@@ -24,7 +24,7 @@ pub fn getPatterns(path:String) -> Vec<Pattern>{
 }
 
 pub fn main() {
-    let path = "tests/test_data/double-diff-overlap.txt".to_owned();
+    let path = "tests/test_data/complex-msub.txt".to_owned();
     let patterns = getPatterns(path);
 
     let mut dag_creator = DagCreator::new();

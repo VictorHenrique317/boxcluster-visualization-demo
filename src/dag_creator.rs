@@ -23,9 +23,9 @@ impl DagCreator {
         };
     }
 
-    fn initializeDag(&mut self){
+    fn initializeDag(&mut self) {
         self.depth = 0;
-        for identifier in self.patterns_mapping.keys(){
+        for identifier in self.patterns_mapping.keys() {
             self.pattern_subs.insert(identifier.clone(), Vec::new());
             self.pattern_supers.insert(identifier.clone(), Vec::new());
         }
@@ -43,24 +43,64 @@ impl DagCreator {
         return first_patern.selfRelationTo(second_patern).0;
     }
 
-    fn drawRelationOnDag(&mut self, first_pattern: &u32, second_pattern: &u32, relation:Relation){
-        if relation == Relation::SuperPattern{
-            self.pattern_subs.get_mut(first_pattern).unwrap().push(second_pattern.clone());
-            self.pattern_supers.get_mut(second_pattern).unwrap().push(first_pattern.clone());
-        }
+    fn drawRelationOnDag(&mut self, first_pattern: &u32, second_pattern: &u32, relation: Relation) {
+        if relation == Relation::SuperPattern {
+            debug_println!("        ==> Setting {} to be a sub of {}", &second_pattern, &first_pattern);
+            self.pattern_subs
+                .get_mut(first_pattern)
+                .unwrap()
+                .push(second_pattern.clone());
 
-        else if relation == Relation::SubPattern{
-            self.pattern_subs.get_mut(second_pattern).unwrap().push(first_pattern.clone());
-            self.pattern_supers.get_mut(first_pattern).unwrap().push(second_pattern.clone());
-        }
+            debug_println!("        ==> Setting {} to be a super of {}", &first_pattern, &second_pattern);
+            self.pattern_supers
+                .get_mut(second_pattern)
+                .unwrap()
+                .push(first_pattern.clone());
 
-        else{
+        } else if relation == Relation::SubPattern {
+            debug_println!("        ==> Setting {} to be a sub of {}", &first_pattern, &second_pattern);
+            self.pattern_subs
+                .get_mut(second_pattern)
+                .unwrap()
+                .push(first_pattern.clone());
+
+            debug_println!("        ==> Setting {} to be a super of {}", &second_pattern, &first_pattern);
+            self.pattern_supers
+                .get_mut(first_pattern)
+                .unwrap()
+                .push(second_pattern.clone());
+        } else {
             panic!("Incorrect use of method");
         }
     }
 
-    fn drawMultipleRelationOnDag(&mut self, pattern: &u32, others: &Vec<u32>, relation_to_others: Relation){
-        for other in others{
+    fn eraseRelationsOnDag(&mut self, pattern_to_erase: &u32) {
+        debug_println!("\n        Erasing relations of {}:", &pattern_to_erase);
+        debug_println!("        ==> Erasing supers of of {}", &pattern_to_erase);
+        *self.pattern_supers.get_mut(pattern_to_erase).unwrap() = vec![];
+
+        for (pattern, subs) in self.pattern_subs.clone(){
+            if subs.contains(pattern_to_erase){ // pattern_to_erase is a sub of this pattern
+                self.pattern_subs.get_mut(&pattern).unwrap().retain(|i| *i != *pattern_to_erase);
+                debug_println!("        ==> {} was a sub of {}, new subs of {}: {:?}", &pattern_to_erase, &pattern, &pattern, self.pattern_subs.get(&pattern).unwrap());
+            }
+        }
+
+        for (pattern, supers) in self.pattern_supers.clone(){
+            if supers.contains(pattern_to_erase){ // pattern_to_erase is a super of this pattern
+                self.pattern_supers.get_mut(&pattern).unwrap().retain(|i| *i != *pattern_to_erase);
+                debug_println!("        ==> {} was a super of {}, new supers of {}: {:?}", &pattern_to_erase, &pattern, &pattern, self.pattern_supers.get(&pattern).unwrap());
+            }
+        }
+    }
+
+    fn drawMultipleRelationOnDag(
+        &mut self,
+        pattern: &u32,
+        others: &Vec<u32>,
+        relation_to_others: Relation,
+    ) {
+        for other in others {
             self.drawRelationOnDag(pattern, other, relation_to_others.clone());
         }
     }
@@ -87,6 +127,9 @@ impl DagCreator {
             }
 
             if is_font {
+                debug_println!("Found new font: {}", &possible_font);
+                debug_println!("Rough subpatterns: {:?}", &subs);
+
                 self.drawMultipleRelationOnDag(possible_font, &subs, Relation::SuperPattern);
                 first_level.push(subs);
             }
@@ -95,31 +138,39 @@ impl DagCreator {
         return first_level;
     }
 
-    fn refineGroup(&self, group: Vec<u32>) -> Vec<Vec<u32>>{
+    fn refineGroup(&mut self, group: Vec<u32>) -> Vec<Vec<u32>> {
+        debug_println!("\n    Refining group {:?}:", &group);
         let mut new_groups: Vec<Vec<u32>> = Vec::new();
-        
-        for base_pattern in group.iter(){
+
+        for base_pattern in group.iter() {
             let mut new_group: Vec<u32> = Vec::new();
 
-            for test_pattern in group.iter(){
+            for test_pattern in group.iter() {
                 let relation = self.firstRelationToSecond(base_pattern, test_pattern);
 
-                if relation == Relation::SuperPattern{ // base is super of test
+                if relation == Relation::SuperPattern {
+                    // base is super of test
+                    self.eraseRelationsOnDag(test_pattern);
+                    // self.eraseRelationsOnDag(base_pattern);
+                    debug_println!("\n        Re-drawing relation of {} and {}:", &base_pattern, &test_pattern);
+                    self.drawRelationOnDag(base_pattern, test_pattern, relation);
                     new_group.push(test_pattern.clone());
                 }
             }
 
-            if !new_group.is_empty(){
+            // if !new_group.is_empty(){
+            if new_group.len() > 1 {
                 new_groups.push(new_group);
             }
         }
 
+        debug_println!("    ==> Done!");
         return new_groups;
     }
 
-    fn addFlattenedGroupsTo(&self, groups: Vec<Vec<u32>>, level: Vec<Vec<u32>>) -> Vec<Vec<u32>>{
+    fn addFlattenedGroupsTo(&self, groups: Vec<Vec<u32>>, level: Vec<Vec<u32>>) -> Vec<Vec<u32>> {
         let mut level = level;
-        for group in groups{
+        for group in groups {
             level.push(group);
         }
 
@@ -129,30 +180,43 @@ impl DagCreator {
     pub fn calculate(&mut self, patterns: Vec<Pattern>, depth_limit: Option<u32>) {
         self.createPatternsMapping(patterns);
         self.initializeDag();
+        debug_println!("Creating level 0");
         let mut last_level: Vec<Vec<u32>> = self.createFirstLevel();
+        debug_println!("Created first level: {:?}", &last_level);
 
-        let depth_limit = match depth_limit{
-            None => 0,
+        let depth_limit = match depth_limit {
+            None => 0, // No depth limits
             Some(i) => i,
         };
 
-        while true{
+        while true {
             self.depth += 1;
-            
-            if self.depth >= depth_limit{
-                break
+
+            if self.depth >= depth_limit && depth_limit != 0{
+                debug_println!("\nMAXIMUM depth limit reached, stopping operation\n");
+                break;
             }
 
+            debug_println!("\n=====> Refining relations | ITERATION: {}", &self.depth);
+            debug_println!("Currently on level {}: {:?}", &self.depth, &last_level);
+            debug_println!("Old subs: {:?}", &self.pattern_subs);
+            debug_println!("Old supers: {:?}", &self.pattern_supers);
+
+
             let mut new_level: Vec<Vec<u32>> = Vec::new();
-            for group in last_level{
+            for group in last_level {
                 let new_groups: Vec<Vec<u32>> = self.refineGroup(group);
                 new_level = self.addFlattenedGroupsTo(new_groups, new_level);
             }
 
-            if new_level.is_empty(){ // No more refinements are possible
+            debug_println!("\nNew subs: {:?}", &self.pattern_subs);
+            debug_println!("New supers: {:?}", &self.pattern_supers);
+            if new_level.is_empty() {
+                // No more refinements are possible
+                debug_println!("MAXIMUM refinement reached with {} iteration(s), stopping operation\n", &self.depth);
                 break;
             }
-
+            
             last_level = new_level;
         }
 
