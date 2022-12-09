@@ -99,6 +99,9 @@ impl Pattern {
 
     pub fn selfRelationTo(&self, pattern: &Pattern) -> (Relation, f64) {
         // Relation of the actual pattern
+        // let self_cells = self.getCells();
+        // let other_cells = pattern.getCells();
+
         let self_cells = self.getCells();
         let other_cells = pattern.getCells();
 
@@ -115,12 +118,25 @@ impl Pattern {
         for self_cell in self_cells.iter() {
             counter += 1.0;
 
-            for other_cell in other_cells.iter() {
-                if self_cell == other_cell {
-                    self_overlap_percentage += self_unit_increase;
-                    other_overlap_percentage += other_unit_increase;
-                }
+            // if self_overlap_percentage * 100.0 > self_cell_length as f64 / 2.0{ 
+            //     break; 
+            // } 
+            // if other_overlap_percentage * 100.0 > other_cell_length as f64 / 2.0{ 
+            //     break; 
+            // }
+
+            
+            if other_cells.contains(self_cell){
+                self_overlap_percentage += self_unit_increase;
+                other_overlap_percentage += other_unit_increase;
             }
+
+            // for other_cell in other_cells.iter() {
+            //     if self_cell == other_cell {
+            //         self_overlap_percentage += self_unit_increase;
+            //         other_overlap_percentage += other_unit_increase;
+            //     }
+            // }
         }
 
         // dbg!(self_overlap_percentage);

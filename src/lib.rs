@@ -17,6 +17,9 @@ pub fn getPatterns(path:String) -> Vec<Pattern>{
         .collect();
 
     for (i, line) in lines.iter().enumerate() {
+        if line.trim().is_empty(){
+            continue;
+        }
         patterns.push(Pattern::new(i as u32 + 1, line.to_owned()));
     }
 
@@ -24,7 +27,8 @@ pub fn getPatterns(path:String) -> Vec<Pattern>{
 }
 
 pub fn main() {
-    let path = "tests/test_data/complex-msub.txt".to_owned();
+    let path = "tests/test_data/4k-big-patterns.txt".to_owned(); // 658 fonts, elapsed time: 8m
+    // let path = "tests/test_data/9k-small-patterns.txt".to_owned();
     let patterns = getPatterns(path);
 
     let mut dag_creator = DagCreator::new();

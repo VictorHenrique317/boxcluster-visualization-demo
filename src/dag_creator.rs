@@ -2,9 +2,12 @@
 use crate::Pattern;
 use crate::Relation;
 use debug_print::debug_println;
+use indicatif::ProgressStyle;
+use std::collections::HashSet;
 use std::collections::hash_map::ValuesMut;
 use std::collections::HashMap;
 use std::hash::Hash;
+use indicatif::ProgressBar;
 
 pub struct DagCreator {
     depth: u32,
@@ -41,6 +44,10 @@ impl DagCreator {
         let first_patern: &Pattern = self.patterns_mapping.get(first_id).unwrap();
         let second_patern: &Pattern = self.patterns_mapping.get(second_id).unwrap();
         return first_patern.selfRelationTo(second_patern).0;
+    }
+
+    fn firstRelationToSecondByPattern(&self, first: &Pattern, second: &Pattern) -> Relation {
+        return first.selfRelationTo(second).0; // Time sink
     }
 
     fn drawRelationOnDag(&mut self, first_pattern: &u32, second_pattern: &u32, relation: Relation) {
@@ -106,15 +113,35 @@ impl DagCreator {
     }
 
     fn createFirstLevel(&mut self) -> Vec<Vec<u32>> {
-        let patterns: Vec<u32> = self.patterns_mapping.keys().map(|i| i.clone()).collect();
+        // let patterns: Vec<u32> = self.patterns_mapping.keys().map(|i| i.clone()).collect();
+        let patterns: HashMap<u32, Pattern> = self.patterns_mapping.iter().clone().map(|i| (i.0.clone(), i.1.clone())).collect();
+        let mut fonts: HashSet<u32> = HashSet::new();
         let mut first_level: Vec<Vec<u32>> = Vec::new();
+        let bar = ProgressBar::new(patterns.len() as u64);
+        bar.set_message("Checked patterns");
+        bar.set_style(ProgressStyle::with_template("{msg}: {bar:40.cyan/blue} {pos:>7}/{len:7} Elapsed time: {elapsed} | Estimated time:{eta} ")
+            .unwrap()
+            .progress_chars("##-"));  
 
-        for possible_font in patterns.iter() {
+        // for possible_font in patterns.iter() {
+        for (possible_font_id, possible_font) in patterns.iter() {
+            // let first_patern: &Pattern = self.patterns_mapping.get(first_id).unwrap();
+            // let possible_font: &Pattern = self.patterns_mapping.get(possible_font).unwrap();
+            bar.inc(1);
+            
             let mut is_font = true;
             let mut subs: Vec<u32> = Vec::new();
 
-            for test_pattern in patterns.iter() {
-                let relation = self.firstRelationToSecond(possible_font, test_pattern);
+            // for test_pattern in patterns.iter().filter(|i| !fonts.contains(i)) {
+            // for (test_pattern_id, test_pattern) in patterns.iter().filter(|i| !fonts.contains(i.0)) {
+            for (test_pattern_id, test_pattern) in patterns.iter() {
+                // let test_pattern: &Pattern = self.patterns_mapping.get(test_pattern).unwrap();
+                // let relation = self.firstRelationToSecond(possible_font, test_pattern);
+                let relation = self.firstRelationToSecondByPattern(possible_font, test_pattern);
+
+                if relation == Relation::NotRelatable {
+                    continue;
+                }
 
                 if relation == Relation::SubPattern {
                     is_font = false;
@@ -122,48 +149,71 @@ impl DagCreator {
                 }
 
                 if relation == Relation::SuperPattern {
-                    subs.push(test_pattern.clone());
+                    subs.push(*test_pattern_id);
                 }
             }
 
             if is_font {
-                debug_println!("Found new font: {}", &possible_font);
+                debug_println!("Found new font: {}", &possible_font_id);
                 debug_println!("Rough subpatterns: {:?}", &subs);
 
-                self.drawMultipleRelationOnDag(possible_font, &subs, Relation::SuperPattern);
+                self.drawMultipleRelationOnDag(possible_font_id, &subs, Relation::SuperPattern);
+                fonts.insert(*possible_font_id);
                 first_level.push(subs);
             }
         }
 
+        bar.finish();
+        println!("{} fonts found!", &fonts.len());
         return first_level;
+    }
+
+    fn alreadyInNewGroups(&self, pattern: &u32, new_groups: &Vec<Vec<u32>>) -> bool{
+        for group in new_groups{
+            if group.contains(pattern){
+                return true;
+            }
+        }
+
+        return false;
     }
 
     fn refineGroup(&mut self, group: Vec<u32>) -> Vec<Vec<u32>> {
         debug_println!("\n    Refining group {:?}:", &group);
         let mut new_groups: Vec<Vec<u32>> = Vec::new();
-
+        
         for base_pattern in group.iter() {
             let mut new_group: Vec<u32> = Vec::new();
 
             for test_pattern in group.iter() {
                 let relation = self.firstRelationToSecond(base_pattern, test_pattern);
+                // let relation = self.firstRelationToSecondByPattern(base_pattern, test_pattern);
 
-                if relation == Relation::SuperPattern {
-                    // base is super of test
-                    self.eraseRelationsOnDag(test_pattern);
-                    // self.eraseRelationsOnDag(base_pattern);
+                if relation == Relation::SuperPattern { // base is super of test
                     debug_println!("\n        Re-drawing relation of {} and {}:", &base_pattern, &test_pattern);
+
+                    if self.alreadyInNewGroups(&test_pattern, &new_groups) || new_group.contains(&test_pattern){
+                        // Behaviour for patterns with multiple supers, do not delete old relations, only add the new ones
+                        debug_println!("\n        {} has been refined already, last detected supers {:?}", &test_pattern, self.pattern_supers.get(test_pattern).unwrap());
+                        
+                        self.drawRelationOnDag(base_pattern, test_pattern, relation);
+                        continue;
+                    }
+
+                    self.eraseRelationsOnDag(test_pattern);
                     self.drawRelationOnDag(base_pattern, test_pattern, relation);
                     new_group.push(test_pattern.clone());
                 }
             }
 
             // if !new_group.is_empty(){
-            if new_group.len() > 1 {
+            if new_group.len() > 0 {
+                debug_println!("\n        NEW group added (for next iteration): {:?}", &new_group);
                 new_groups.push(new_group);
             }
         }
 
+        debug_println!("\n    ALL groups that were added (for next iteration): {:?}", &new_groups);
         debug_println!("    ==> Done!");
         return new_groups;
     }
@@ -180,7 +230,7 @@ impl DagCreator {
     pub fn calculate(&mut self, patterns: Vec<Pattern>, depth_limit: Option<u32>) {
         self.createPatternsMapping(patterns);
         self.initializeDag();
-        debug_println!("Creating level 0");
+        println!("Creating level 0");
         let mut last_level: Vec<Vec<u32>> = self.createFirstLevel();
         debug_println!("Created first level: {:?}", &last_level);
 
@@ -197,23 +247,28 @@ impl DagCreator {
                 break;
             }
 
-            debug_println!("\n=====> Refining relations | ITERATION: {}", &self.depth);
+            println!("\n=====> Refining relations | ITERATION: {}", &self.depth);
             debug_println!("Currently on level {}: {:?}", &self.depth, &last_level);
             debug_println!("Old subs: {:?}", &self.pattern_subs);
             debug_println!("Old supers: {:?}", &self.pattern_supers);
 
 
             let mut new_level: Vec<Vec<u32>> = Vec::new();
+            // let bar = ProgressBar::new(last_level.len() as u64);
+
             for group in last_level {
+                // bar.inc(1);
                 let new_groups: Vec<Vec<u32>> = self.refineGroup(group);
                 new_level = self.addFlattenedGroupsTo(new_groups, new_level);
             }
+
+            // bar.finish();
 
             debug_println!("\nNew subs: {:?}", &self.pattern_subs);
             debug_println!("New supers: {:?}", &self.pattern_supers);
             if new_level.is_empty() {
                 // No more refinements are possible
-                debug_println!("MAXIMUM refinement reached with {} iteration(s), stopping operation\n", &self.depth);
+                println!("MAXIMUM refinement reached with {} iteration(s), stopping operation\n", &self.depth);
                 break;
             }
             
@@ -223,4 +278,5 @@ impl DagCreator {
         debug_println!("Pattern subs: {:?}", self.pattern_subs);
         debug_println!("Pattern supers: {:?}", self.pattern_supers);
     }
+
 }
