@@ -27,9 +27,21 @@ pub fn getPatterns(path:String) -> Vec<Pattern>{
 }
 
 pub fn main() {
+    // let path = "tests/test_data/real1.txt".to_owned(); // 658 fonts, elapsed time: 8m
     let path = "tests/test_data/4k-big-patterns.txt".to_owned(); // 658 fonts, elapsed time: 8m
     // let path = "tests/test_data/9k-small-patterns.txt".to_owned();
+    // let path = "tests/test_data/simple-overlap.txt".to_owned();
+    
     let patterns = getPatterns(path);
+
+    // dbg!(patterns.get(1).unwrap().selfRelationTo(patterns.get(2).unwrap()));
+    // dbg!(patterns.get(2).unwrap().selfRelationTo(patterns.get(0).unwrap()));
+    // dbg!(patterns.get(2).unwrap().selfRelationTo(patterns.get(3).unwrap()));
+    // dbg!(patterns.get(3).unwrap().selfRelationTo(patterns.get(0).unwrap()));
+    // println!();
+    // dbg!(patterns.get(1).unwrap().selfRelationTo(patterns.get(2).unwrap()));
+    // dbg!(patterns.get(1).unwrap().selfRelationTo(patterns.get(3).unwrap()));
+    // dbg!(patterns.get(1).unwrap().selfRelationTo(patterns.get(0).unwrap()));
 
     let mut dag_creator = DagCreator::new();
     dag_creator.calculate(patterns, None);

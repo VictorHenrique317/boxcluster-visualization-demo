@@ -304,4 +304,35 @@ mod dag_tests {
         assert_eq!(r_subs, e_subs);
         assert_eq!(r_supers, e_supers);
     }
+
+    #[test]
+    fn testReal1() {
+        let path = "tests/test_data/real1.txt".to_owned();
+        let mut patterns = getPatterns(path);
+        // patterns.shuffle(&mut thread_rng());
+
+        let mut dag_creator = DagCreator::new();
+        dag_creator.calculate(patterns, None);
+
+        let mut expected_subs: HashMap<u32, Vec<u32>> = HashMap::new();
+        expected_subs.insert(1, vec![]);
+        expected_subs.insert(2, vec![3]);
+        expected_subs.insert(3, vec![4]);
+        expected_subs.insert(4, vec![1]);
+
+        let mut expected_supers: HashMap<u32, Vec<u32>> = HashMap::new();
+        expected_supers.insert(1, vec![4]);
+        expected_supers.insert(2, vec![]);
+        expected_supers.insert(3, vec![2]);
+        expected_supers.insert(4, vec![3]);
+
+        let r_subs = sortHashMap(&dag_creator.pattern_subs);
+        let r_supers = sortHashMap(&dag_creator.pattern_supers);
+
+        let e_subs = sortHashMap(&expected_subs);
+        let e_supers = sortHashMap(&expected_supers);
+
+        assert_eq!(r_subs, e_subs);
+        assert_eq!(r_supers, e_supers);
+    }
 }

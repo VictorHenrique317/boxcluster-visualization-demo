@@ -7,6 +7,7 @@ use std::collections::HashSet;
 use std::collections::hash_map::ValuesMut;
 use std::collections::HashMap;
 use std::hash::Hash;
+use std::ops::Index;
 use indicatif::ProgressBar;
 
 pub struct DagCreator {
@@ -43,39 +44,48 @@ impl DagCreator {
     fn firstRelationToSecond(&self, first_id: &u32, second_id: &u32) -> Relation {
         let first_patern: &Pattern = self.patterns_mapping.get(first_id).unwrap();
         let second_patern: &Pattern = self.patterns_mapping.get(second_id).unwrap();
-        return first_patern.selfRelationTo(second_patern).0;
+        return first_patern.selfRelationTo(second_patern);
     }
 
     fn firstRelationToSecondByPattern(&self, first: &Pattern, second: &Pattern) -> Relation {
-        return first.selfRelationTo(second).0; // Time sink
+        return first.selfRelationTo(second); // Time sink
     }
 
     fn drawRelationOnDag(&mut self, first_pattern: &u32, second_pattern: &u32, relation: Relation) {
         if relation == Relation::SuperPattern {
-            debug_println!("        ==> Setting {} to be a sub of {}", &second_pattern, &first_pattern);
-            self.pattern_subs
-                .get_mut(first_pattern)
-                .unwrap()
-                .push(second_pattern.clone());
+            if !self.pattern_subs.get(first_pattern).unwrap().contains(second_pattern){
+                debug_println!("        ==> Setting {} to be a sub of {}", &second_pattern, &first_pattern);
+                self.pattern_subs
+                    .get_mut(first_pattern)
+                    .unwrap()
+                    .push(*second_pattern);
+            }
 
-            debug_println!("        ==> Setting {} to be a super of {}", &first_pattern, &second_pattern);
-            self.pattern_supers
-                .get_mut(second_pattern)
-                .unwrap()
-                .push(first_pattern.clone());
+            if !self.pattern_supers.get(second_pattern).unwrap().contains(first_pattern){
+                debug_println!("        ==> Setting {} to be a super of {}", &first_pattern, &second_pattern);
+                self.pattern_supers
+                    .get_mut(second_pattern)
+                    .unwrap()
+                    .push(*first_pattern);
+            }
 
         } else if relation == Relation::SubPattern {
-            debug_println!("        ==> Setting {} to be a sub of {}", &first_pattern, &second_pattern);
-            self.pattern_subs
-                .get_mut(second_pattern)
-                .unwrap()
-                .push(first_pattern.clone());
-
-            debug_println!("        ==> Setting {} to be a super of {}", &second_pattern, &first_pattern);
-            self.pattern_supers
-                .get_mut(first_pattern)
-                .unwrap()
-                .push(second_pattern.clone());
+            if !self.pattern_subs.get(second_pattern).unwrap().contains(first_pattern){
+                debug_println!("        ==> Setting {} to be a sub of {}", &first_pattern, &second_pattern);
+                self.pattern_subs
+                    .get_mut(second_pattern)
+                    .unwrap()
+                    .push(*first_pattern);
+            }
+            
+            if !self.pattern_supers.get(first_pattern).unwrap().contains(second_pattern){
+                debug_println!("        ==> Setting {} to be a super of {}", &second_pattern, &first_pattern);
+                self.pattern_supers
+                    .get_mut(first_pattern)
+                    .unwrap()
+                    .push(second_pattern.clone());
+            }
+            
         } else {
             panic!("Incorrect use of method");
         }
@@ -83,7 +93,6 @@ impl DagCreator {
 
     fn eraseRelationsOnDag(&mut self, pattern_to_erase: &u32) {
         debug_println!("\n        Erasing relations of {}:", &pattern_to_erase);
-        debug_println!("        ==> Erasing supers of of {}", &pattern_to_erase);
         *self.pattern_supers.get_mut(pattern_to_erase).unwrap() = vec![];
 
         for (pattern, subs) in self.pattern_subs.clone(){
@@ -101,12 +110,7 @@ impl DagCreator {
         }
     }
 
-    fn drawMultipleRelationOnDag(
-        &mut self,
-        pattern: &u32,
-        others: &Vec<u32>,
-        relation_to_others: Relation,
-    ) {
+    fn drawMultipleRelationOnDag(&mut self, pattern: &u32, others: &Vec<u32>, relation_to_others: Relation) {
         for other in others {
             self.drawRelationOnDag(pattern, other, relation_to_others.clone());
         }
@@ -135,10 +139,13 @@ impl DagCreator {
             // for test_pattern in patterns.iter().filter(|i| !fonts.contains(i)) {
             // for (test_pattern_id, test_pattern) in patterns.iter().filter(|i| !fonts.contains(i.0)) {
             for (test_pattern_id, test_pattern) in patterns.iter() {
+
+                if possible_font_id == test_pattern_id{
+                    continue;
+                }
                 // let test_pattern: &Pattern = self.patterns_mapping.get(test_pattern).unwrap();
                 // let relation = self.firstRelationToSecond(possible_font, test_pattern);
                 let relation = self.firstRelationToSecondByPattern(possible_font, test_pattern);
-
                 if relation == Relation::NotRelatable {
                     continue;
                 }
@@ -178,6 +185,16 @@ impl DagCreator {
         return false;
     }
 
+    fn sort2DVector(vector: Vec<Vec<u32>>) -> Vec<Vec<u32>>{
+        let mut sorted: Vec<Vec<u32>> = Vec::new();
+        for v in vector.iter(){
+            let mut sorted_v = v.clone();
+            sorted_v.sort();
+            sorted.push(sorted_v);
+        }
+        return sorted;
+    }   
+
     fn refineGroup(&mut self, group: Vec<u32>) -> Vec<Vec<u32>> {
         debug_println!("\n    Refining group {:?}:", &group);
         let mut new_groups: Vec<Vec<u32>> = Vec::new();
@@ -186,17 +203,60 @@ impl DagCreator {
             let mut new_group: Vec<u32> = Vec::new();
 
             for test_pattern in group.iter() {
+                if base_pattern == test_pattern{
+                    continue;
+                }
                 let relation = self.firstRelationToSecond(base_pattern, test_pattern);
-                // let relation = self.firstRelationToSecondByPattern(base_pattern, test_pattern);
 
                 if relation == Relation::SuperPattern { // base is super of test
-                    debug_println!("\n        Re-drawing relation of {} and {}:", &base_pattern, &test_pattern);
+                    debug_println!("\n        Re-drawing relation of {} to {} to {:?}:", &base_pattern, &test_pattern, &relation);
 
                     if self.alreadyInNewGroups(&test_pattern, &new_groups) || new_group.contains(&test_pattern){
                         // Behaviour for patterns with multiple supers, do not delete old relations, only add the new ones
-                        debug_println!("\n        {} has been refined already, last detected supers {:?}", &test_pattern, self.pattern_supers.get(test_pattern).unwrap());
+                        let last_detected_supers = self.pattern_supers.get(test_pattern).unwrap().clone();
+                        debug_println!("\n        {} has been refined already, last detected supers {:?}", &test_pattern, &last_detected_supers);
                         
+                        for last_detected_super in last_detected_supers.into_iter().filter(|p| p != base_pattern){
+                            if self.firstRelationToSecond(base_pattern, &last_detected_super) == Relation::SuperPattern{
+                                // Verifies if base is super of any last detected_suppers (they are all on the same level as base)
+                                // In this case put these last detected_super on the next level alongside its previous subs
+                                // In other words, flatten these detected_super and its subs to the same level (the next one)
+                                let mut last_detected_super_subs = self.pattern_subs.get(&last_detected_super).unwrap().clone();
+                                last_detected_super_subs.sort();
+                                debug_println!("        {} is super of last detected super {}, flattening {} and its subs {:?} to the same level", &base_pattern, &last_detected_super, &last_detected_super, &last_detected_super_subs);
+
+                                new_groups = DagCreator::sort2DVector(new_groups);
+                                new_groups.retain(|group| *group != last_detected_super_subs);
+
+                                let mut flattened_group = vec![last_detected_super];
+                                for sub in last_detected_super_subs{
+                                    flattened_group.push(sub);
+                                }
+                                
+                                self.eraseRelationsOnDag(&last_detected_super);
+                                self.drawMultipleRelationOnDag(base_pattern, &flattened_group, Relation::SuperPattern);
+                                new_groups.push(flattened_group);
+                                debug_println!("        New groups are now: {:?}", &new_groups);
+                            }
+
+                            continue;
+                        }
+
                         self.drawRelationOnDag(base_pattern, test_pattern, relation);
+                        continue;
+                    }
+
+                    if !self.pattern_subs.get(test_pattern).unwrap().is_empty(){
+                        // Behaviour for patterns that already have subs, move everything as it is only changing the 
+                        // super of test_pattern
+
+                        let test_subs = self.pattern_subs.get(test_pattern).unwrap().clone();
+                        debug_println!("\n        {} already has subs for the next iteration, last detected subs {:?}", &test_pattern, &test_subs);
+                        debug_println!("\n        Moving structure to be sub of {}", &test_pattern);
+                        
+                        self.eraseRelationsOnDag(test_pattern);
+                        self.drawRelationOnDag(base_pattern, test_pattern, relation);
+                        self.drawMultipleRelationOnDag(test_pattern, &test_subs, Relation::SuperPattern);
                         continue;
                     }
 
@@ -223,7 +283,7 @@ impl DagCreator {
         for group in groups {
             level.push(group);
         }
-
+        
         return level;
     }
 
