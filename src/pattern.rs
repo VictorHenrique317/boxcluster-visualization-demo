@@ -21,8 +21,8 @@ pub struct Pattern {
     pub dims_values: Vec<HashSet<u32>>, // {{1,2,3}, {3,2,1}}
     pub density: f64,
     pub size: u32,
-    pub super_patterns: Vec<u32>, // useless?
-    pub sub_patterns: Vec<u32>, // useless?
+    pub supers: Vec<u32>,
+    pub subs: Vec<u32>,
 }
 
 impl PartialEq for Pattern {
@@ -49,8 +49,8 @@ impl Pattern {
             dims_values: dims_values,
             density: density,
             size: size,
-            super_patterns: Vec::new(),
-            sub_patterns: Vec::new(),
+            supers: Vec::new(),
+            subs: Vec::new(),
         };
     }
 
@@ -88,7 +88,6 @@ impl Pattern {
         for dims_value in dims_values{
             size *= dims_value.len() as u32;
         }
-
         return size;
     }
 
@@ -104,61 +103,11 @@ impl Pattern {
         return result;
     }
 
-    // pub fn getCells(&self) -> Vec<Vec<u32>> {
-    //     let n = self.dims_values.len();
-    //     let mut temp: Vec<Vec<u32>> = self.dims_values[0]
-    //         .clone()
-    //         .into_iter()
-    //         .map(|i| vec![i])
-    //         .collect();
-
-    //     for i in 1..n {
-    //         temp = Pattern::cartesianProduct(&temp, &self.dims_values[i]);
-    //     }
-    //     return temp;
-    // }
-
-    // pub fn selfRelationTo(&self, pattern: &Pattern) -> (Relation, f64) {
-    //     // Relation of the actual pattern
-
-    //     let self_cells = self.getCells();
-    //     let other_cells = pattern.getCells();
-
-    //     let self_cell_length = self_cells.len();
-    //     let other_cell_length = other_cells.len();
-
-    //     let self_unit_increase: f64 = 1.0 / self_cell_length as f64;
-    //     let other_unit_increase: f64 = 1.0 / other_cell_length as f64;
-
-    //     let mut self_overlap_percentage = 0.0;
-    //     let mut other_overlap_percentage = 0.0;
-
-    //     let mut counter = 0.0;
-    //     for self_cell in self_cells.iter() {
-    //         counter += 1.0;
-            
-    //         if other_cells.contains(self_cell){
-    //             self_overlap_percentage += self_unit_increase;
-    //             other_overlap_percentage += other_unit_increase;
-    //         }
-    //     }
-
-    //     if self_overlap_percentage > other_overlap_percentage {
-    //         return (Relation::SubPattern, self_overlap_percentage);
-    //     }
-
-    //     if other_overlap_percentage > self_overlap_percentage {
-    //         return (Relation::SuperPattern, self_overlap_percentage);
-    //     }
-
-    //     return (Relation::NotRelatable, self_overlap_percentage);
-    // }
-
     pub fn selfRelationTo(&self, pattern: &Pattern) -> Relation {
-        debug_println!("        Comparing patterns {} to {}", &self.identifier, &pattern.identifier);
+        debug_println!("Comparing patterns {} to {}", &self.identifier, &pattern.identifier);
 
         if self.identifier == pattern.identifier{
-            panic!("Comparing pattern to itself");
+            return Relation::NotRelatable;
         }
         
         // Relation of the actual pattern
@@ -168,15 +117,6 @@ impl Pattern {
         for self_dims_value in self_dims_values{
             let other_dims_value = other_dims_values.next().unwrap();
 
-            // let has_intersection = match self_dims_value.intersection(other_dims_value).next(){
-            //     Some(i) => true, // Any intersection
-            //     None => false, // No intersection
-            // };
-
-            // if !has_intersection {
-            //     return Relation::NotRelatable;
-            // }
-
             let intersection = self_dims_value.intersection(other_dims_value).count();
 
             if intersection == 0{
@@ -185,40 +125,10 @@ impl Pattern {
         }
 
         // Super or sub
-
         if self.size > pattern.size{
             return Relation::SuperPattern;
         }
 
         return Relation::SubPattern;
-        
-        // let self_cell_length = self_cells.len();
-        // let other_cell_length = other_cells.len();
-
-        // let self_unit_increase: f64 = 1.0 / self_cell_length as f64;
-        // let other_unit_increase: f64 = 1.0 / other_cell_length as f64;
-
-        // let mut self_overlap_percentage = 0.0;
-        // let mut other_overlap_percentage = 0.0;
-
-        // let mut counter = 0.0;
-        // for self_cell in self_cells.iter() {
-        //     counter += 1.0;
-            
-        //     if other_cells.contains(self_cell){
-        //         self_overlap_percentage += self_unit_increase;
-        //         other_overlap_percentage += other_unit_increase;
-        //     }
-        // }
-
-        // if self_overlap_percentage > other_overlap_percentage {
-        //     return (Relation::SubPattern, self_overlap_percentage);
-        // }
-
-        // if other_overlap_percentage > self_overlap_percentage {
-        //     return (Relation::SuperPattern, self_overlap_percentage);
-        // }
-
-        // return (Relation::NotRelatable, self_overlap_percentage);
     }
 }

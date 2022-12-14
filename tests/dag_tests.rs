@@ -32,8 +32,8 @@ mod dag_tests {
         let mut patterns = getPatterns(path);
         patterns.shuffle(&mut thread_rng());
 
-        let mut dag_creator = DagCreator::new();
-        dag_creator.calculate(patterns, None);
+        let mut dag_creator = DagCreator::new(patterns);
+        dag_creator.create();
 
         let mut expected_subs: HashMap<u32, Vec<u32>> = HashMap::new();
         expected_subs.insert(1, vec![2]);
@@ -43,8 +43,8 @@ mod dag_tests {
         expected_supers.insert(1, vec![]);
         expected_supers.insert(2, vec![1]);
 
-        let r_subs = sortHashMap(&dag_creator.pattern_subs);
-        let r_supers = sortHashMap(&dag_creator.pattern_supers);
+        let r_subs = sortHashMap(&dag_creator.dag.getFlattenedSubs());
+        let r_supers = sortHashMap(&dag_creator.dag.getFlattenedSupers());
 
         let e_subs = sortHashMap(&expected_subs);
         let e_supers = sortHashMap(&expected_supers);
@@ -59,8 +59,8 @@ mod dag_tests {
         let mut patterns = getPatterns(path);
         patterns.shuffle(&mut thread_rng());
 
-        let mut dag_creator = DagCreator::new();
-        dag_creator.calculate(patterns, None);
+        let mut dag_creator = DagCreator::new(patterns);
+        dag_creator.create();
 
         let mut expected_subs: HashMap<u32, Vec<u32>> = HashMap::new();
         expected_subs.insert(1, vec![2]);
@@ -72,8 +72,8 @@ mod dag_tests {
         expected_supers.insert(2, vec![1]);
         expected_supers.insert(3, vec![]);
 
-        let r_subs = sortHashMap(&dag_creator.pattern_subs);
-        let r_supers = sortHashMap(&dag_creator.pattern_supers);
+        let r_subs = sortHashMap(&dag_creator.dag.getFlattenedSubs());
+        let r_supers = sortHashMap(&dag_creator.dag.getFlattenedSupers());
 
         let e_subs = sortHashMap(&expected_subs);
         let e_supers = sortHashMap(&expected_supers);
@@ -88,8 +88,8 @@ mod dag_tests {
         let mut patterns = getPatterns(path);
         patterns.shuffle(&mut thread_rng());
 
-        let mut dag_creator = DagCreator::new();
-        dag_creator.calculate(patterns, None);
+        let mut dag_creator = DagCreator::new(patterns);
+        dag_creator.create();
 
         let mut expected_subs: HashMap<u32, Vec<u32>> = HashMap::new();
         expected_subs.insert(1, vec![2, 3]);
@@ -101,8 +101,8 @@ mod dag_tests {
         expected_supers.insert(2, vec![1]);
         expected_supers.insert(3, vec![1]);
 
-        let r_subs = sortHashMap(&dag_creator.pattern_subs);
-        let r_supers = sortHashMap(&dag_creator.pattern_supers);
+        let r_subs = sortHashMap(&dag_creator.dag.getFlattenedSubs());
+        let r_supers = sortHashMap(&dag_creator.dag.getFlattenedSupers());
 
         let e_subs = sortHashMap(&expected_subs);
         let e_supers = sortHashMap(&expected_supers);
@@ -117,8 +117,8 @@ mod dag_tests {
         let mut patterns = getPatterns(path);
         patterns.shuffle(&mut thread_rng());
 
-        let mut dag_creator = DagCreator::new();
-        dag_creator.calculate(patterns, None);
+        let mut dag_creator = DagCreator::new(patterns);
+        dag_creator.create();
 
         let mut expected_subs: HashMap<u32, Vec<u32>> = HashMap::new();
         expected_subs.insert(1, vec![2, 3, 4]);
@@ -132,8 +132,8 @@ mod dag_tests {
         expected_supers.insert(3, vec![1]);
         expected_supers.insert(4, vec![1]);
 
-        let r_subs = sortHashMap(&dag_creator.pattern_subs);
-        let r_supers = sortHashMap(&dag_creator.pattern_supers);
+        let r_subs = sortHashMap(&dag_creator.dag.getFlattenedSubs());
+        let r_supers = sortHashMap(&dag_creator.dag.getFlattenedSupers());
 
         let e_subs = sortHashMap(&expected_subs);
         let e_supers = sortHashMap(&expected_supers);
@@ -148,8 +148,8 @@ mod dag_tests {
         let mut patterns = getPatterns(path);
         patterns.shuffle(&mut thread_rng());
 
-        let mut dag_creator = DagCreator::new();
-        dag_creator.calculate(patterns, None);
+        let mut dag_creator = DagCreator::new(patterns);
+        dag_creator.create();
 
         let mut expected_subs: HashMap<u32, Vec<u32>> = HashMap::new();
         expected_subs.insert(1, vec![2, 3, 4, 5]);
@@ -165,8 +165,8 @@ mod dag_tests {
         expected_supers.insert(4, vec![1]);
         expected_supers.insert(5, vec![1]);
 
-        let r_subs = sortHashMap(&dag_creator.pattern_subs);
-        let r_supers = sortHashMap(&dag_creator.pattern_supers);
+        let r_subs = sortHashMap(&dag_creator.dag.getFlattenedSubs());
+        let r_supers = sortHashMap(&dag_creator.dag.getFlattenedSupers());
 
         let e_subs = sortHashMap(&expected_subs);
         let e_supers = sortHashMap(&expected_supers);
@@ -181,8 +181,8 @@ mod dag_tests {
         let mut patterns = getPatterns(path);
         patterns.shuffle(&mut thread_rng());
 
-        let mut dag_creator = DagCreator::new();
-        dag_creator.calculate(patterns, None);
+        let mut dag_creator = DagCreator::new(patterns);
+        dag_creator.create();
 
         let mut expected_subs: HashMap<u32, Vec<u32>> = HashMap::new();
         expected_subs.insert(1, vec![2]);
@@ -194,8 +194,8 @@ mod dag_tests {
         expected_supers.insert(2, vec![1]);
         expected_supers.insert(3, vec![2]);
 
-        let r_subs = sortHashMap(&dag_creator.pattern_subs);
-        let r_supers = sortHashMap(&dag_creator.pattern_supers);
+        let r_subs = sortHashMap(&dag_creator.dag.getFlattenedSubs());
+        let r_supers = sortHashMap(&dag_creator.dag.getFlattenedSupers());
 
         let e_subs = sortHashMap(&expected_subs);
         let e_supers = sortHashMap(&expected_supers);
@@ -210,8 +210,8 @@ mod dag_tests {
         let mut patterns = getPatterns(path);
         patterns.shuffle(&mut thread_rng());
 
-        let mut dag_creator = DagCreator::new();
-        dag_creator.calculate(patterns, None);
+        let mut dag_creator = DagCreator::new(patterns);
+        dag_creator.create();
 
         let mut expected_subs: HashMap<u32, Vec<u32>> = HashMap::new();
         expected_subs.insert(1, vec![2, 3]);
@@ -225,8 +225,8 @@ mod dag_tests {
         expected_supers.insert(3, vec![1]);
         expected_supers.insert(4, vec![3]);
 
-        let r_subs = sortHashMap(&dag_creator.pattern_subs);
-        let r_supers = sortHashMap(&dag_creator.pattern_supers);
+        let r_subs = sortHashMap(&dag_creator.dag.getFlattenedSubs());
+        let r_supers = sortHashMap(&dag_creator.dag.getFlattenedSupers());
 
         let e_subs = sortHashMap(&expected_subs);
         let e_supers = sortHashMap(&expected_supers);
@@ -241,8 +241,8 @@ mod dag_tests {
         let mut patterns = getPatterns(path);
         patterns.shuffle(&mut thread_rng());
 
-        let mut dag_creator = DagCreator::new();
-        dag_creator.calculate(patterns, None);
+        let mut dag_creator = DagCreator::new(patterns);
+        dag_creator.create();
 
         let mut expected_subs: HashMap<u32, Vec<u32>> = HashMap::new();
         expected_subs.insert(1, vec![2, 5, 6]);
@@ -262,8 +262,8 @@ mod dag_tests {
         expected_supers.insert(6, vec![1]);
         expected_supers.insert(7, vec![6]);
 
-        let r_subs = sortHashMap(&dag_creator.pattern_subs);
-        let r_supers = sortHashMap(&dag_creator.pattern_supers);
+        let r_subs = sortHashMap(&dag_creator.dag.getFlattenedSubs());
+        let r_supers = sortHashMap(&dag_creator.dag.getFlattenedSupers());
 
         let e_subs = sortHashMap(&expected_subs);
         let e_supers = sortHashMap(&expected_supers);
@@ -278,8 +278,8 @@ mod dag_tests {
         let mut patterns = getPatterns(path);
         patterns.shuffle(&mut thread_rng());
 
-        let mut dag_creator = DagCreator::new();
-        dag_creator.calculate(patterns, None);
+        let mut dag_creator = DagCreator::new(patterns);
+        dag_creator.create();
 
         let mut expected_subs: HashMap<u32, Vec<u32>> = HashMap::new();
         expected_subs.insert(1, vec![2,4]);
@@ -295,8 +295,8 @@ mod dag_tests {
         expected_supers.insert(4, vec![1]);
         expected_supers.insert(5, vec![2, 4]);
 
-        let r_subs = sortHashMap(&dag_creator.pattern_subs);
-        let r_supers = sortHashMap(&dag_creator.pattern_supers);
+        let r_subs = sortHashMap(&dag_creator.dag.getFlattenedSubs());
+        let r_supers = sortHashMap(&dag_creator.dag.getFlattenedSupers());
 
         let e_subs = sortHashMap(&expected_subs);
         let e_supers = sortHashMap(&expected_supers);
@@ -311,8 +311,8 @@ mod dag_tests {
         let mut patterns = getPatterns(path);
         // patterns.shuffle(&mut thread_rng());
 
-        let mut dag_creator = DagCreator::new();
-        dag_creator.calculate(patterns, None);
+        let mut dag_creator = DagCreator::new(patterns);
+        dag_creator.create();
 
         let mut expected_subs: HashMap<u32, Vec<u32>> = HashMap::new();
         expected_subs.insert(1, vec![]);
@@ -326,8 +326,8 @@ mod dag_tests {
         expected_supers.insert(3, vec![2]);
         expected_supers.insert(4, vec![3]);
 
-        let r_subs = sortHashMap(&dag_creator.pattern_subs);
-        let r_supers = sortHashMap(&dag_creator.pattern_supers);
+        let r_subs = sortHashMap(&dag_creator.dag.getFlattenedSubs());
+        let r_supers = sortHashMap(&dag_creator.dag.getFlattenedSupers());
 
         let e_subs = sortHashMap(&expected_subs);
         let e_supers = sortHashMap(&expected_supers);
