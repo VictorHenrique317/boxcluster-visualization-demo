@@ -1,4 +1,6 @@
 #![allow(non_snake_case)]
+use debug_print::debug_println;
+
 use crate::Pattern;
 use std::collections::HashMap;
 
@@ -54,7 +56,15 @@ impl Dag {
     // }
 
     pub fn addFont(&mut self, new_font: &u32){
-        self.fonts.push(*new_font);
+        debug_println!("    {} is now a font", new_font);
+        if !self.fonts.contains(new_font){
+            self.fonts.push(*new_font);
+        }
+    }
+
+    pub fn removeFont(&mut self, old_font: &u32){
+        debug_println!("    {} is not a font anymore", old_font);
+        self.fonts.retain(|f| f != old_font);
     }
 
     pub fn traverse(&self, to_pattern: &u32) -> &Vec<u32>{

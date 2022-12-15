@@ -1,7 +1,7 @@
 #![allow(non_snake_case)]
 use std::collections::HashSet;
 
-use debug_print::debug_println;
+use debug_print::{debug_println, debug_print};
 use itertools::iproduct;
 
 pub struct Cell {
@@ -104,9 +104,9 @@ impl Pattern {
     }
 
     pub fn selfRelationTo(&self, pattern: &Pattern) -> Relation {
-        debug_println!("Comparing patterns {} to {}", &self.identifier, &pattern.identifier);
-
+        debug_print!("    Comparing patterns {} to {}: ", &self.identifier, &pattern.identifier);
         if self.identifier == pattern.identifier{
+            debug_println!("{:?}", Relation::NotRelatable);
             return Relation::NotRelatable;
         }
         
@@ -118,17 +118,25 @@ impl Pattern {
             let other_dims_value = other_dims_values.next().unwrap();
 
             let intersection = self_dims_value.intersection(other_dims_value).count();
-
-            if intersection == 0{
+            if intersection == 0{ // No physical contact
+                debug_println!("{:?}", Relation::NotRelatable);
                 return Relation::NotRelatable;
             }
         }
 
-        // Super or sub
         if self.size > pattern.size{
+            debug_println!("{:?}", Relation::SuperPattern);
             return Relation::SuperPattern;
         }
 
-        return Relation::SubPattern;
+        if self.size < pattern.size{
+            debug_println!("{:?}", Relation::SubPattern);
+            return Relation::SubPattern;
+        }
+
+        // Equal sizes
+        debug_println!("{:?}", Relation::NotRelatable);
+        return Relation::NotRelatable;
+        
     }
 }
