@@ -335,4 +335,21 @@ mod dag_tests {
         assert_eq!(r_subs, e_subs);
         assert_eq!(r_supers, e_supers);
     }
+
+    // #[test]
+    // fn exaustive_testing(){
+    //     for i in 0..100{
+    //         testSimpleOverlap();
+    //         testSimpleOverlap2();
+    //         testDoubleDiffOverlap();
+    //         testTripleDiffOverlap();
+    //         testQuadrupleDiffOverlap();
+    //         testSimpleMSub();
+    //         testSimpleMSub2();
+    //         testComplexMSub();
+    //         testSimpleMSuper();
+    //         testReal1();
+    //     }
+    // }
+
 }

@@ -23,12 +23,12 @@ impl Dag {
         return mapping;
     }
 
-    fn eraseOtherParentsOfBranches(&mut self, subtree_font: &u32){
-        aaa 
-    }
+    // fn eraseOtherParentsOfBranches(&mut self, subtree_font: &u32){
+    //     aaa 
+    // }
 
     pub fn moveSubtreeBellow(&mut self, moving_node: &u32, new_parent: &u32) {
-        self.eraseOtherParentsOfBranches(moving_node);
+        // self.eraseOtherParentsOfBranches(moving_node);
 
         let mut moving_node_p = self.mapping.get_mut(&moving_node).unwrap();
         let old_parents: Vec<u32> = moving_node_p.supers.clone();

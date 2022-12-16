@@ -32,7 +32,7 @@ pub fn main() {
     // let path = "tests/test_data/real1.txt".to_owned(); // 658 fonts, elapsed time: 8m
     // let path = "tests/test_data/4k-big-patterns.txt".to_owned(); // 658 fonts, elapsed time: 8m
     // let path = "tests/test_data/9k-small-patterns.txt".to_owned();
-    let path = "tests/test_data/real1.txt".to_owned(); // [2, 1, 4, 3] [1, 2, 4, 3]
+    let path = "tests/test_data/simple-msuper.txt".to_owned(); // [1, 3, 4, 2, 5] [4, 2, 1, 3, 5]
     
     let patterns = getPatterns(path);
 
