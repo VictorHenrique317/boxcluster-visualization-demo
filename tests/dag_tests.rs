@@ -306,50 +306,18 @@ mod dag_tests {
     }
 
     #[test]
-    fn testReal1() {
-        let path = "tests/test_data/real1.txt".to_owned();
-        let mut patterns = getPatterns(path);
-        // patterns.shuffle(&mut thread_rng());
-
-        let mut dag_creator = DagCreator::new(patterns);
-        dag_creator.create();
-
-        let mut expected_subs: HashMap<u32, Vec<u32>> = HashMap::new();
-        expected_subs.insert(1, vec![]);
-        expected_subs.insert(2, vec![3]);
-        expected_subs.insert(3, vec![4]);
-        expected_subs.insert(4, vec![1]);
-
-        let mut expected_supers: HashMap<u32, Vec<u32>> = HashMap::new();
-        expected_supers.insert(1, vec![4]);
-        expected_supers.insert(2, vec![]);
-        expected_supers.insert(3, vec![2]);
-        expected_supers.insert(4, vec![3]);
-
-        let r_subs = sortHashMap(&dag_creator.dag.getFlattenedSubs());
-        let r_supers = sortHashMap(&dag_creator.dag.getFlattenedSupers());
-
-        let e_subs = sortHashMap(&expected_subs);
-        let e_supers = sortHashMap(&expected_supers);
-
-        assert_eq!(r_subs, e_subs);
-        assert_eq!(r_supers, e_supers);
+    fn exaustive_testing(){
+        for i in 0..1000{
+            testSimpleOverlap();
+            testSimpleOverlap2();
+            testDoubleDiffOverlap();
+            testTripleDiffOverlap();
+            testQuadrupleDiffOverlap();
+            testSimpleMSub();
+            testSimpleMSub2();
+            testComplexMSub();
+            testSimpleMSuper();
+        }
     }
-
-    // #[test]
-    // fn exaustive_testing(){
-    //     for i in 0..100{
-    //         testSimpleOverlap();
-    //         testSimpleOverlap2();
-    //         testDoubleDiffOverlap();
-    //         testTripleDiffOverlap();
-    //         testQuadrupleDiffOverlap();
-    //         testSimpleMSub();
-    //         testSimpleMSub2();
-    //         testComplexMSub();
-    //         testSimpleMSuper();
-    //         testReal1();
-    //     }
-    // }
 
 }

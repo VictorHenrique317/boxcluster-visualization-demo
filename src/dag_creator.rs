@@ -81,14 +81,20 @@ impl DagCreator{
             if !self.assigned_belonging_level{ // Only change the belonging branch if the node hasnt been asigned yet
                 // If is sub of this subtree font then it can be inserted somewhere down the branch
                 self.belonging_branch = current_branch.clone();
+                debug_println!("    Belonging branch is now {}", &self.belonging_branch);
             }
-
-            
-            // self.belonging_branch = current_branch.clone(); 
-        
         }
         
         for current_level_node in current_level_nodes.iter(){
+            if relation == Relation::SuperPattern{ 
+                // Node to compare is super of subtree_font, does not need to traverse this branch
+                continue;
+            }
+
+            if relation == Relation::NotRelatable{
+                // Node to compare does not have 'physical' contact with subtree_font, does not need to traverse this branch
+                continue;
+            }
             next_level_fonts.push(*current_level_node);
         }
 
@@ -100,6 +106,7 @@ impl DagCreator{
 
         // Recursion returnal bellow
 
+        // Insertion operation
         if belongs_to_this_level && !self.assigned_belonging_level{ // Makes sure to insert on the deepest possible
             debug_println!("    Setting insertion point to bellow {}", subtree_font);
             
@@ -107,9 +114,12 @@ impl DagCreator{
             self.assigned_belonging_level = true; // Previous branches cannot change insertion point now
             self.belonging_level = current_level;
             self.belonging_branch = current_branch;
+            debug_println!("    Belonging branch is now {}", &self.belonging_branch);
         }
 
-        if relation == Relation::SuperPattern && current_branch != self.belonging_branch{ // Makes sure to connect ONLY to different branches
+        // Connects node_to_compare as super of different branches
+        // if relation == Relation::SuperPattern && current_branch != self.belonging_branch{ // Makes sure to connect ONLY to different branches
+        if relation == Relation::SuperPattern{ // Makes sure to connect ONLY to different branches
             // A pattern (node_to_compare) from a DIFFERENT upper branch is super of the font of this branch
             // Sets the super relation on the recursion returnal
             debug_println!("    {} {} {}{}", format!("{}", &node_to_compare).yellow(), "located in a different upper branch is super of".yellow(), format!("{}", &subtree_font).yellow(), ", CONNECTING them".yellow());
@@ -118,9 +128,11 @@ impl DagCreator{
 
 
         // dbg!(relation == Relation::SubPattern);
+        // dbg!(current_branch);
         // dbg!(self.belonging_branch);
         // dbg!(relation == Relation::SubPattern && current_branch == self.belonging_branch);
 
+        // Connects node_to_compare as sub of different branches
         if relation == Relation::SubPattern && current_branch != self.belonging_branch{ // Makes sure to connect ONLY to different branches
             // A pattern (node_to_compare) from a DIFFERENT branch is sub of the font of this branch
             // Sets the sub relation on the recursion returnal
@@ -135,7 +147,7 @@ impl DagCreator{
             // by the super of this subfont after this recursive call ends, if it was triggered it would make 
             // a wrong connection
 
-            debug_println!("    {} {} {}{}", format!("{}", node_to_compare).yellow(), "located in a different branch is sub of".yellow(), format!("{}", &subtree_font).yellow(), ", CONNECTING them".yellow());
+            debug_println!("    {} {} {}{}", format!("{}", node_to_compare).yellow(), "located in a different below branch is sub of".yellow(), format!("{}", &subtree_font).yellow(), ", CONNECTING them".yellow());
             self.dag.addBellow(node_to_compare, subtree_font);
         }
 
@@ -245,7 +257,7 @@ impl DagCreator{
 
     pub fn create(&mut self){
         let unorganized_nodes: Vec<u32> = self.dag.getNodes();
-        // let unorganized_nodes: Vec<u32> = vec![4, 3, 5, 2, 1]; // FOR TESTING ONLY
+        // let unorganized_nodes: Vec<u32> = vec![2, 5, 1, 4, 3]; // FOR TESTING ONLY
 
 
         debug_println!("Unorganized nodes: {:?}", &unorganized_nodes);

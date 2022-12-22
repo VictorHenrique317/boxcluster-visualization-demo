@@ -11,6 +11,7 @@ pub struct Cell {
 #[derive(PartialEq, Debug, Clone, Copy)]
 pub enum Relation {
     NotRelatable,
+    Overlaps,
     SuperPattern,
     SubPattern,
 }
@@ -18,7 +19,7 @@ pub enum Relation {
 #[derive(Clone, Debug)]
 pub struct Pattern {
     pub identifier: u32,
-    pub dims_values: Vec<HashSet<u32>>, // {{1,2,3}, {3,2,1}}
+    pub dims_values: Vec<Vec<u32>>, // {{1,2,3}, {3,2,1}}
     pub density: f64,
     pub size: u32,
     pub supers: Vec<u32>,
@@ -54,8 +55,8 @@ impl Pattern {
         };
     }
 
-    fn extractDimsAndDensity(pattern_str: String) -> (Vec<HashSet<u32>>, f64) {
-        let mut dims_values: Vec<HashSet<u32>> = Vec::new();
+    fn extractDimsAndDensity(pattern_str: String) -> (Vec<Vec<u32>>, f64) {
+        let mut dims_values: Vec<Vec<u32>> = Vec::new();
         let mut density: f64 = -1.0;
 
         let pattern_str: Vec<String> = pattern_str.split(" ").map(|i| i.to_owned()).collect();
@@ -72,17 +73,19 @@ impl Pattern {
                 break;
             }
 
-            let dim_values: HashSet<u32> = dim_values_str
+            let mut dim_values: Vec<u32> = dim_values_str
                 .split(",")
                 .map(|i| i.parse::<u32>().unwrap())
                 .collect();
+            dim_values.sort();
+
             dims_values.push(dim_values);
         }
 
         return (dims_values, density);
     }
 
-    fn getSize(dims_values: &Vec<HashSet<u32>>) -> u32{
+    fn getSize(dims_values: &Vec<Vec<u32>>) -> u32{
         let mut size: u32 = 1;
 
         for dims_value in dims_values{
@@ -103,10 +106,51 @@ impl Pattern {
         return result;
     }
 
+    fn intersectionPercentage(vector: &Vec<u32>, base: &Vec<u32>) -> f64 { // Only works for sorted vectors
+        if vector.len() > base.len(){
+            panic!("Wrong use of intersection method");
+        }
+
+        let mut current_index = 0;
+        let mut contained_values_sum = 0;
+        let mut stop = false;
+
+        for element in vector{
+            while true{
+                let base_element = base.get(current_index);
+            
+                if base_element.is_none(){ // Index out of boudaries
+                    stop = true;
+                    break;
+                }
+
+                let base_element = base_element.unwrap();
+
+                if base_element > element { // If the vector is sorted the value will not be found anymore
+                    break;
+                }
+
+                current_index += 1; // Element is lesser or equal than base element, can change index
+
+                if element == base_element{
+                    contained_values_sum += 1;
+                    break;
+                }
+            }
+
+            if stop{
+                break;
+            }
+
+        }
+
+        return contained_values_sum as f64 / vector.len() as f64;
+    }
+
     pub fn selfRelationTo(&self, pattern: &Pattern) -> Relation {
         debug_print!("    Comparing patterns {} to {}: ", &self.identifier, &pattern.identifier);
         if self.identifier == pattern.identifier{
-            debug_println!("{:?}", Relation::NotRelatable);
+            debug_println!("{:?} (Identical patterns)", Relation::NotRelatable);
             return Relation::NotRelatable;
         }
         
@@ -117,10 +161,27 @@ impl Pattern {
         for self_dims_value in self_dims_values{
             let other_dims_value = other_dims_values.next().unwrap();
 
-            let intersection = self_dims_value.intersection(other_dims_value).count();
-            if intersection == 0{ // No physical contact
+            let mut intersection_percentage: f64;
+
+
+            if self.size > pattern.size{ // Self is possible super
+                intersection_percentage = Pattern::intersectionPercentage(other_dims_value, self_dims_value);
+            }
+            else if pattern.size > self.size{ // Pattern is possible super
+                intersection_percentage = Pattern::intersectionPercentage(self_dims_value, other_dims_value);
+            }
+            else{ // No one is super but there may be an overlap
+                intersection_percentage = Pattern::intersectionPercentage(other_dims_value, self_dims_value); // Doesn't matter the order
+            }
+
+            if intersection_percentage == 0.0{
                 debug_println!("{:?}", Relation::NotRelatable);
                 return Relation::NotRelatable;
+            }
+
+            if intersection_percentage < 1.0{
+                debug_println!("{:?}", Relation::Overlaps);
+                return Relation::Overlaps;
             }
         }
 
@@ -134,9 +195,8 @@ impl Pattern {
             return Relation::SubPattern;
         }
 
-        // Equal sizes
-        debug_println!("{:?}", Relation::NotRelatable);
-        return Relation::NotRelatable;
+        // Its the same pattern if the execution reaches here, duplicated patterns exist in the input file
+        panic!("Duplicated patterns detected in input file");
         
     }
 }
