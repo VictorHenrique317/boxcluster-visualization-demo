@@ -19,7 +19,6 @@ pub struct DagCreator{
     belonging_level: u32,
     belonging_branch: u32,
 
-    // relation_matrix: HashMap<Vec<u32>, Relation>,
     pub dag: Dag,
 }
 
@@ -28,18 +27,6 @@ impl DagCreator{
         // return DagCreator { actual_node: 0, insertion_points: Vec::new(), relation_matrix: HashMap::new(), dag: Dag::new(patterns) };
         return DagCreator { actual_node: 0, insertion_points: HashMap::new(), assigned_belonging_level: false, belonging_level:0, belonging_branch:0, dag: Dag::new(patterns) };
     }
-
-    // fn putRelationInMemory(&mut self, node1: &u32, node2: &u32, relation: &Relation){
-    //     let mut key: Vec<u32> = vec![*node1, *node2];
-
-    //     self.relation_matrix.insert(key, *relation);
-    // }
-    
-    // fn getRelationFromMemory(&self, node1: &u32, node2: &u32) -> Relation{
-    //     let mut key: Vec<u32> = vec![*node1, *node2];
-
-    //     return *self.relation_matrix.get(&key).unwrap();
-    // }
 
     fn changePosition(&mut self, new_position: u32) -> &Vec<u32> {
         self.actual_node = new_position;
@@ -52,21 +39,6 @@ impl DagCreator{
         return first_patern.selfRelationTo(second_patern);
     }
 
-    fn actualRelationTo(&self, node: &u32) -> Relation {
-        let first_patern: &Pattern = self.dag.getPattern(&self.actual_node);
-        let second_patern: &Pattern = self.dag.getPattern(node);
-        return first_patern.selfRelationTo(second_patern);
-    }
-
-    fn isNodeSubOfAny(&self, node_to_compare: &u32, nodes: &Vec<u32>) -> bool {
-        for node in nodes.iter(){
-            if self.firstRelationToSecond(node_to_compare, node) == Relation::SubPattern{
-                return true;
-            }
-        }
-        return false;
-    }
-
     fn traverseTree(&mut self, subtree_font: &u32, node_to_compare: &u32, current_branch: u32, current_level: u32){
         debug_print!("\n    => Traversing subtree of {}, ", subtree_font);
         let current_level_nodes: Vec<u32> = self.changePosition(*subtree_font).clone();
@@ -77,33 +49,23 @@ impl DagCreator{
         let relation = self.firstRelationToSecond(node_to_compare, &subtree_font);
         if relation == Relation::SubPattern{
             belongs_to_this_level = true;
-
-            if !self.assigned_belonging_level{ // Only change the belonging branch if the node hasnt been asigned yet
-                // If is sub of this subtree font then it can be inserted somewhere down the branch
-                self.belonging_branch = current_branch.clone();
-                debug_println!("    Belonging branch is now {}", &self.belonging_branch);
-            }
         }
         
         for current_level_node in current_level_nodes.iter(){
-            if relation == Relation::SuperPattern{ 
-                // Node to compare is super of subtree_font, does not need to traverse this branch
+            if relation == Relation::SuperPattern{ // Node to compare is super of subtree_font, does not need to traverse this branch
                 continue;
             }
 
-            if relation == Relation::NotRelatable{
-                // Node to compare does not have 'physical' contact with subtree_font, does not need to traverse this branch
+            if relation == Relation::NotRelatable{ // Node to compare does not have 'physical' contact with subtree_font, does not need to traverse this branch
                 continue;
             }
             next_level_fonts.push(*current_level_node);
         }
 
-
         for (i, next_level_font) in next_level_fonts.iter().enumerate(){ // RECURSIVE
             let next_branch = current_branch + i as u32;
             self.traverseTree(&next_level_font, node_to_compare, next_branch, current_level + 1);
         }
-
         // Recursion returnal bellow
 
         // Insertion operation
@@ -111,41 +73,28 @@ impl DagCreator{
             debug_println!("    Setting insertion point to bellow {}", subtree_font);
             
             self.insertion_points.insert(*subtree_font, InsertionPlace::Bellow);
-            self.assigned_belonging_level = true; // Previous branches cannot change insertion point now
+            self.assigned_belonging_level = true; // Previous levels cannot change insertion point now
             self.belonging_level = current_level;
             self.belonging_branch = current_branch;
             debug_println!("    Belonging branch is now {}", &self.belonging_branch);
         }
 
-        // Connects node_to_compare as super of different branches
-        // if relation == Relation::SuperPattern && current_branch != self.belonging_branch{ // Makes sure to connect ONLY to different branches
-        if relation == Relation::SuperPattern{ // Makes sure to connect ONLY to different branches
-            // A pattern (node_to_compare) from a DIFFERENT upper branch is super of the font of this branch
+        // Connects node_to_compare as super of this subtree font
+        if relation == Relation::SuperPattern{
+            // A pattern (node_to_compare) from an upper branch is super of the font of this branch
             // Sets the super relation on the recursion returnal
             debug_println!("    {} {} {}{}", format!("{}", &node_to_compare).yellow(), "located in a different upper branch is super of".yellow(), format!("{}", &subtree_font).yellow(), ", CONNECTING them".yellow());
             self.dag.addBellow(subtree_font, node_to_compare);
         }
-
-
-        // dbg!(relation == Relation::SubPattern);
-        // dbg!(current_branch);
-        // dbg!(self.belonging_branch);
-        // dbg!(relation == Relation::SubPattern && current_branch == self.belonging_branch);
-
+    
         // Connects node_to_compare as sub of different branches
         if relation == Relation::SubPattern && current_branch != self.belonging_branch{ // Makes sure to connect ONLY to different branches
             // A pattern (node_to_compare) from a DIFFERENT branch is sub of the font of this branch
             // Sets the sub relation on the recursion returnal
 
-            if current_level < self.belonging_level{
-                // Avoids the connection of patterns that are above the insertion point
+            if current_level < self.belonging_level{ // Avoids the connection of patterns that are above the insertion point
                 return;
             }
-
-            self.belonging_branch = current_branch;
-            // Changing the belonging branch to the current one here avoids the triggering of this conditional
-            // by the super of this subfont after this recursive call ends, if it was triggered it would make 
-            // a wrong connection
 
             debug_println!("    {} {} {}{}", format!("{}", node_to_compare).yellow(), "located in a different below branch is sub of".yellow(), format!("{}", &subtree_font).yellow(), ", CONNECTING them".yellow());
             self.dag.addBellow(node_to_compare, subtree_font);
@@ -221,7 +170,6 @@ impl DagCreator{
                 self.dag.moveSubtreeBellow(&sub, node);
             }
         }
-        
     }
 
     fn insertNodeOnDag(&mut self, node: &u32){
@@ -250,15 +198,12 @@ impl DagCreator{
                 self.insertNodeBellow(node, insertion_point);
                 continue;
             }
-
-            
         }
     }
 
     pub fn create(&mut self){
         let unorganized_nodes: Vec<u32> = self.dag.getNodes();
         // let unorganized_nodes: Vec<u32> = vec![2, 5, 1, 4, 3]; // FOR TESTING ONLY
-
 
         debug_println!("Unorganized nodes: {:?}", &unorganized_nodes);
 
@@ -271,13 +216,14 @@ impl DagCreator{
         for unorganized_node in unorganized_nodes{
             self.setInsertionPoints(&unorganized_node);
             self.insertNodeOnDag(&unorganized_node);
-            // bar.inc(1);
+            bar.inc(1);
         }
-
         bar.finish();
 
         debug_println!("Subs: {:?}", self.dag.getFlattenedSubs());
         debug_println!("Supers: {:?}", self.dag.getFlattenedSupers());
+
+        println!("Nb of found fonts: {}", self.dag.getFontNodes().len());
     }
 
     

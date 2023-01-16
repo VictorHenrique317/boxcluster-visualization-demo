@@ -29,14 +29,17 @@ pub fn getPatterns(path:String) -> Vec<Pattern>{
 }
 
 pub fn main() {
-    // let path = "tests/test_data/real1.txt".to_owned(); // 658 fonts, elapsed time: 8m
-    // let path = "tests/test_data/4k-big-patterns.txt".to_owned(); // 658 fonts, elapsed time: 8m
+    // let path = "tests/test_data/real1.txt".to_owned(); 
+    // let path = "tests/test_data/4k-big-patterns.txt".to_owned(); 
     // let path = "tests/test_data/9k-small-patterns.txt".to_owned();
-    let path = "tests/test_data/simple-msuper.txt".to_owned();
+    // let path = "tests/test_data/simple-msuper.txt".to_owned();
+    // let path = "tests/test_data/synth-2.txt".to_owned();
+    let path = "tests/test_data/paf-1.txt".to_owned();
     
     let patterns = getPatterns(path);
 
-    // dbg!(patterns.get(3).unwrap().selfRelationTo(patterns.get(1).unwrap()));
+    // dbg!(patterns.get(8336).unwrap().selfRelationTo(patterns.get(462).unwrap()));
+    // dbg!(patterns.get(8).unwrap().selfRelationTo(patterns.get(462).unwrap()));
 
     let mut dag_creator = DagCreator::new(patterns);
     dag_creator.create();

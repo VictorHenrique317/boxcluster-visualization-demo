@@ -64,22 +64,28 @@ impl Pattern {
 
         for (i, dim_values_str) in pattern_str.iter().enumerate() {
             if i == vector_length - 1 {
-                // density = dim_values_str.replace("\r", "").parse::<f64>().unwrap();
+                // Tries to get the density
                 density = match dim_values_str.replace("\r", "").parse::<f64>(){
                     Ok(d) => d,
-                    Err(_error) => 1.0,
+                    Err(_error) => -1.0,
                 };
 
-                break;
+                if density != -1.0{ // Pattern HAS density in file
+                    break;
+                }
             }
 
-            let mut dim_values: Vec<u32> = dim_values_str
+            let mut dim_values: Vec<u32> = dim_values_str.replace("\r", "")
                 .split(",")
                 .map(|i| i.parse::<u32>().unwrap())
                 .collect();
             dim_values.sort();
 
             dims_values.push(dim_values);
+        }
+
+        if density == -1.0{ // Pattern HAS NO density in file
+            density = 1.0;
         }
 
         return (dims_values, density);
@@ -107,17 +113,25 @@ impl Pattern {
     }
 
     fn intersectionPercentage(vector: &Vec<u32>, base: &Vec<u32>) -> f64 { // Only works for sorted vectors
+        let reference_area = vector.len() as f64;
+        let mut used_vector = vector;
+        let mut used_base = base;
+
         if vector.len() > base.len(){
-            panic!("Wrong use of intersection method");
+            // One dimension of possible sub 'vector' is larger than the corresponding dim on base, so its not contained in base
+            used_vector = base;
+            used_base = vector;
+            // Switches the vectors of place so that vector is always smaller than base
+            // panic!("Wrong use of intersection method");
         }
 
         let mut current_index = 0;
         let mut contained_values_sum = 0;
         let mut stop = false;
 
-        for element in vector{
+        for element in used_vector{
             while true{
-                let base_element = base.get(current_index);
+                let base_element = used_base.get(current_index);
             
                 if base_element.is_none(){ // Index out of boudaries
                     stop = true;
@@ -144,7 +158,7 @@ impl Pattern {
 
         }
 
-        return contained_values_sum as f64 / vector.len() as f64;
+        return contained_values_sum as f64 / reference_area; // Percetange of intersection on VECTOR
     }
 
     pub fn selfRelationTo(&self, pattern: &Pattern) -> Relation {
@@ -152,7 +166,7 @@ impl Pattern {
         if self.identifier == pattern.identifier{
             debug_println!("{:?} (Identical patterns)", Relation::NotRelatable);
             return Relation::NotRelatable;
-        }
+        }  
         
         // Relation of the actual pattern
         let self_dims_values = self.dims_values.iter();
@@ -163,7 +177,6 @@ impl Pattern {
 
             let mut intersection_percentage: f64;
 
-
             if self.size > pattern.size{ // Self is possible super
                 intersection_percentage = Pattern::intersectionPercentage(other_dims_value, self_dims_value);
             }
@@ -173,6 +186,8 @@ impl Pattern {
             else{ // No one is super but there may be an overlap
                 intersection_percentage = Pattern::intersectionPercentage(other_dims_value, self_dims_value); // Doesn't matter the order
             }
+
+            // intersection_percentage = Pattern::intersectionPercentage(self_dims_value, other_dims_value);
 
             if intersection_percentage == 0.0{
                 debug_println!("{:?}", Relation::NotRelatable);
@@ -185,6 +200,8 @@ impl Pattern {
             }
         }
 
+        // Here all dimensions have 100% intersection
+
         if self.size > pattern.size{
             debug_println!("{:?}", Relation::SuperPattern);
             return Relation::SuperPattern;
@@ -196,7 +213,7 @@ impl Pattern {
         }
 
         // Its the same pattern if the execution reaches here, duplicated patterns exist in the input file
-        panic!("Duplicated patterns detected in input file");
+        panic!("Duplicated patterns detected in input file: {} and {}", &self.identifier, &pattern.identifier);
         
     }
 }

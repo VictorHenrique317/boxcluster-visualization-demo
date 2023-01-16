@@ -306,6 +306,76 @@ mod dag_tests {
     }
 
     #[test]
+    fn testSimpleMRoot() {
+        let path = "tests/test_data/simple-mroot.txt".to_owned();
+        let mut patterns = getPatterns(path);
+        patterns.shuffle(&mut thread_rng());
+
+        let mut dag_creator = DagCreator::new(patterns);
+        dag_creator.create();
+
+        let mut expected_subs: HashMap<u32, Vec<u32>> = HashMap::new();
+        expected_subs.insert(1, vec![2,5]);
+        expected_subs.insert(2, vec![3]);
+        expected_subs.insert(3, vec![]);
+        expected_subs.insert(4, vec![5]);
+        expected_subs.insert(5, vec![6]);
+        expected_subs.insert(6, vec![]);
+
+        let mut expected_supers: HashMap<u32, Vec<u32>> = HashMap::new();
+        expected_supers.insert(1, vec![]);
+        expected_supers.insert(2, vec![1]);
+        expected_supers.insert(3, vec![2]);
+        expected_supers.insert(4, vec![]);
+        expected_supers.insert(5, vec![1,4]);
+        expected_supers.insert(6, vec![5]);
+
+        let r_subs = sortHashMap(&dag_creator.dag.getFlattenedSubs());
+        let r_supers = sortHashMap(&dag_creator.dag.getFlattenedSupers());
+
+        let e_subs = sortHashMap(&expected_subs);
+        let e_supers = sortHashMap(&expected_supers);
+
+        assert_eq!(r_subs, e_subs);
+        assert_eq!(r_supers, e_supers);
+    }
+
+    #[test]
+    fn testSimpleLine() {
+        let path = "tests/test_data/simple-line.txt".to_owned();
+        let mut patterns = getPatterns(path);
+        patterns.shuffle(&mut thread_rng());
+
+        let mut dag_creator = DagCreator::new(patterns);
+        dag_creator.create();
+
+        let mut expected_subs: HashMap<u32, Vec<u32>> = HashMap::new();
+        expected_subs.insert(1, vec![2]);
+        expected_subs.insert(2, vec![3]);
+        expected_subs.insert(3, vec![4]);
+        expected_subs.insert(4, vec![5]);
+        expected_subs.insert(5, vec![6]);
+        expected_subs.insert(6, vec![]);
+
+        let mut expected_supers: HashMap<u32, Vec<u32>> = HashMap::new();
+        expected_supers.insert(1, vec![]);
+        expected_supers.insert(2, vec![1]);
+        expected_supers.insert(3, vec![2]);
+        expected_supers.insert(4, vec![3]);
+        expected_supers.insert(5, vec![4]);
+        expected_supers.insert(6, vec![5]);
+
+        let r_subs = sortHashMap(&dag_creator.dag.getFlattenedSubs());
+        let r_supers = sortHashMap(&dag_creator.dag.getFlattenedSupers());
+
+        let e_subs = sortHashMap(&expected_subs);
+        let e_supers = sortHashMap(&expected_supers);
+
+        assert_eq!(r_subs, e_subs);
+        assert_eq!(r_supers, e_supers);
+    }
+
+    #[test]
     fn exaustive_testing(){
         for i in 0..1000{
             testSimpleOverlap();
@@ -317,6 +387,8 @@ mod dag_tests {
             testSimpleMSub2();
             testComplexMSub();
             testSimpleMSuper();
+            testSimpleMRoot();
+            testSimpleLine();
         }
     }
 
