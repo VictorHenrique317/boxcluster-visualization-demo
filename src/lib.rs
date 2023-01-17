@@ -35,13 +35,14 @@ pub fn main() {
     // let path = "tests/test_data/simple-msuper.txt".to_owned();
     // let path = "tests/test_data/synth-2.txt".to_owned();
     let path = "tests/test_data/paf-1.txt".to_owned();
+    // let path = "tests/test_data/real-1.txt".to_owned();
     
     let patterns = getPatterns(path);
 
-    // dbg!(patterns.get(8336).unwrap().selfRelationTo(patterns.get(462).unwrap()));
+    dbg!(patterns.get(0).unwrap().selfRelationTo(patterns.get(1).unwrap()));
     // dbg!(patterns.get(8).unwrap().selfRelationTo(patterns.get(462).unwrap()));
 
     let mut dag_creator = DagCreator::new(patterns);
-    dag_creator.create();
+    // dag_creator.create();
 
 }
